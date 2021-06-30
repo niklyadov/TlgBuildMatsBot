@@ -13,6 +13,7 @@ insert into Roles (name) values ('default_user');
 create table Users (
     telegram_id integer primary key,
     role_id integer not null,
+    start_date text,
     foreign key (role_id) references roles(id)
 );
 
@@ -41,6 +42,13 @@ begin
             3,
             (select id from ordering where name = 'cost')
         );
+end;
+
+create trigger set_datetime_now_on_user_insert
+    after insert on users
+begin
+    update users
+        set start_date = strftime('%Y-%m-%d %H:%M:%S', datetime('now')) where telegram_id = new.telegram_id;
 end;
 
 -- Ordering ------------------------------------------------------------------------------------------------------------
@@ -90,7 +98,7 @@ end;
 create table Requests (
     id integer primary key,
     user_id integer not null,
-    date text not null,
+    date text,
     result text not null,
     foreign key (user_id) references users(telegram_id)
 );
@@ -182,7 +190,6 @@ create table Logs (
     foreign key (message_id) references messages(id)
 );
 
-
 create trigger check_on_logs_insert
     before insert on logs
 begin
@@ -245,6 +252,7 @@ end;
 
 create trigger set_datetime_now_on_price_history_insert
     after insert on requests
+    when date is null
 begin
     update requests
         set date = strftime('%Y-%m-%d %H:%M:%S', datetime('now')) where id = new.id;
