@@ -29,5 +29,20 @@ def my_role_command(message):
     else:
         _bot.reply_to(message, "Вы не зарегистрированы. Как вы это сделали?")
 
+@_bot.message_handler(commands=['test'])
+def test(message):
+    stringList = {"Name": "John", "Language": "Python", "API": "pyTelegramBotAPI"}
+    crossIcon = u"\u274C"
+    markup = telebot.types.InlineKeyboardMarkup()
+
+    for key, value in stringList.items():
+        markup.add(telebot.types.InlineKeyboardButton(text=value,
+                                              callback_data="['value', '" + value + "', '" + key + "']"),
+                   telebot.types.InlineKeyboardButton(text=crossIcon,
+                                              callback_data="['key', '" + key + "']"))
+    _bot.send_message(chat_id=message.chat.id,
+                     text="Here are the values of stringList",
+                     reply_markup=markup,
+                     parse_mode='HTML')
 
 _bot.polling()
