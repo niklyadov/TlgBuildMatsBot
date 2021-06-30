@@ -13,7 +13,7 @@ class Users:
     def is_super_user(self, id):
         with sqlite3.connect("main.db") as dbc:
             cr = dbc.cursor()
-            cr.execute("SELECT count(*) FROM Users WHERE telegram_id = ? and role_id = 3", (id,))
+            cr.execute("SELECT count(*) FROM Users WHERE telegram_id = ? and role_id = 1", (id,))
             return not cr.fetchone()[0] == 0
 
     # проверка на админа
@@ -34,7 +34,7 @@ class Users:
     def transfer_super_user_rights(self, super_user_id, user_id):
         if Users.is_super_user(super_user_id):
             with sqlite3.connect("main.db") as dbc:
-                dbc.execute("UPDATE Users SET role_id = 3 where telegram_id = ?", (user_id,))
+                dbc.execute("UPDATE Users SET role_id = 1 where telegram_id = ?", (user_id,))
                 dbc.execute("UPDATE Users SET role_id = 2 where telegram_id = ?", (super_user_id,))
                 dbc.commit()
 
