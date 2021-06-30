@@ -10,22 +10,22 @@ _users = users.Users()
 def start_command(message):
     uid = message.from_user.id
 
-    if not _users.isRegistered(uid):
-        _users.registerUser(uid)
+    if not _users.is_registered(uid):
+        _users.register_user(uid)
         _bot.reply_to(message, "Вы были зарегистрированы!")
-    else:
-        _bot.reply_to(message, "Для поиска необходимых материалов,\nвведите команду /search")
+
+    _bot.reply_to(message, "Для поиска необходимых материалов,\nвведите команду /search")
 
 
 @_bot.message_handler(commands=['myrole'])
-def myrole_command(message):
+def my_role_command(message):
     uid = message.from_user.id
 
-    if _users.isRegistered(uid):
-        if _users.isAdmin(uid):
+    if _users.is_registered(uid):
+        if _users.is_admin(uid):
             _bot.reply_to(message, "Вы админ")
         else:
-            _bot.reply_to(message, "Вы не админ")
+            _bot.reply_to(message, "Вы обычный пользователь")
     else:
         _bot.reply_to(message, "Вы не зарегистрированы. Как вы это сделали?")
 
