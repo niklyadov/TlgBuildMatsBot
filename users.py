@@ -24,11 +24,14 @@ class Users:
             return not cr.fetchone()[0] == 0
 
     # добавим права админа юзеру
-    def set_admin(self, super_user_id, user_id):
+    def set_user_role(self, super_user_id, user_id, role):
         if Users.is_super_user(super_user_id):
-            with sqlite3.connect("main.db") as dbc:
-                dbc.execute("UPDATE Users SET role_id = 2 where telegram_id = ?", (user_id,))
-                dbc.commit()
+            if role == 1:
+                Users.transfer_super_user_rights(super_user_id, user_id)
+            else:
+                with sqlite3.connect("main.db") as dbc:
+                    dbc.execute("UPDATE Users SET role_id = ? where telegram_id = ?", (role, user_id))
+                    dbc.commit()
 
     # передача прав супер-юзера
     def transfer_super_user_rights(self, super_user_id, user_id):
