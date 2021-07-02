@@ -2,10 +2,10 @@ import telebot
 import BestFinder
 import Settings
 
-import users
+import Users
 
 _bot = telebot.TeleBot('1898682710:AAGGjRKCbh3a2zPzylGSqQ_Se9x3xSCPBBM')
-_users = users.Users()
+_users = Users.Users()
 
 
 @_bot.message_handler(commands=['start'])
@@ -24,7 +24,6 @@ def search_command(message):
     _bot.reply_to(message, "Для поиска необходимых материалов,\nвведите команду '/search [запрос]")
 
 
-
 # TODO - сделать нормальный вывод
 @_bot.message_handler(regexp="/search [а-яА-Я \-]*")
 def search_word_command(message):
@@ -40,7 +39,6 @@ def search_word_command(message):
             msg += "{}:\nЦена: {} за {}\nДоступно в {}\nРейтинг: {}\n{}\n\n".format(item.name, item.price, item.per, item.available_at, item.rating, item.url)
 
         _bot.reply_to(message, msg)
-
 
 
 @_bot.message_handler(commands=['myrole'])

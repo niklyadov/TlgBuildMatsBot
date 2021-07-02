@@ -1,6 +1,7 @@
 import Requests
 import JSON_Converter
-import ResultModel
+import Key_Words
+import RequestModel
 
 class BestFinder:
 
@@ -9,9 +10,9 @@ class BestFinder:
         self.ordering = ordering
 
     def find_best(self, search_word):
-       # db_items = JSON_Converter.JSON_Converter.deserialize(Requests.Requests.get_last_day_requests())
-        db_items = [ResultModel.ResultModel("url", "кирпич", 12.4, "шт", 5, ["ЧЛБ", "ЕКБ"]), ResultModel.ResultModel("url2", "камень", 13.4, "шт", 5, ["ЧЛБ2", "ЕКБ2"])]
-        db_items = [i for i in db_items if search_word in i.name]
+       #db_items = JSON_Converter.JSON_Converter.deserialize(Requests.Requests.get_last_day_requests_by_search_word(search_word))
+        db_items = [RequestModel.RequestModel("url", "кирпич", 12.4, "шт", 5, ["ЧЛБ", "ЕКБ"]),
+                    RequestModel.RequestModel("url2", "камень", 13.4, "шт", 5, ["ЧЛБ2", "ЕКБ2"])]
 
         if self.ordering == 1:
             sorted(db_items, key=lambda key: key.price)

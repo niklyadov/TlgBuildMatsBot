@@ -99,7 +99,10 @@ create table Requests (
     id integer primary key,
     user_id integer not null,
     date text,
+    full_name text not null,
+    key_word_id integer not null,
     result text not null,
+    foreign key (key_word_id) references key_words(id),
     foreign key (user_id) references users(telegram_id)
 );
 
@@ -145,6 +148,14 @@ begin
                 where message = (case when rowid = -1 then 'error' else 'successful' end))
         );
 end;
+
+-- Key_Words -----------------------------------------------------------------------------------------------------------
+
+create table Key_Words (
+    id integer primary key,
+    word text not null
+);
+-- create some keywords --
 
 -- Favourites ----------------------------------------------------------------------------------------------------------
 
@@ -210,50 +221,4 @@ begin
     -------------------------------------------------------------
     select raise(abort, 'Message does not exist.')
         where new.message_id not in (select id from messages);
-end;
-
--- Categories ----------------------------------------------------------------------------------------------------------
-
-create table Categories (
-    id integer primary key,
-    name text not null
-);
-insert into categories (name) values ('insulation');
-insert into categories (name) values ('waterproofing');
-insert into categories (name) values ('primers');
-insert into categories (name) values ('membranes');
-insert into categories (name) values ('bricks');
-insert into categories (name) values ('cement');
-insert into categories (name) values ('building blocks');
-
--- Price_History -------------------------------------------------------------------------------------------------------
-
-create table Price_History (
-    id integer primary key,
-    category_id integer not null,
-    date text,
-    price real,
-    foreign key (category_id) references categories(id)
-);
-
-create trigger check_on_price_history_insert
-    before insert on price_history
-begin
-    select raise(abort, 'Category does not exist.')
-        where new.category_id not in (select id from categories);
-end;
-
-create trigger check_on_price_history_update
-    before update on price_history
-begin
-    select raise(abort, 'Category does not exist.')
-        where new.category_id not in (select id from categories);
-end;
-
-create trigger set_datetime_now_on_price_history_insert
-    after insert on requests
-    when date is null
-begin
-    update requests
-        set date = strftime('%Y-%m-%d %H:%M:%S', datetime('now')) where id = new.id;
 end;

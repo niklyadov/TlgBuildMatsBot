@@ -1,9 +1,26 @@
 
 
 class RequestModel:
-
-    # request - запрос, который ввел пользователь
-    # result - объект класса ResultModel, полученный путем парса сайта
-    def __init__(self, request, result):
-        self.request = request
+    
+    # url - ссылка на страницу с товаром
+    # key_word - ключевое слово, по которому был найден данный товар
+    # result - объект класса ResultModel, хранящий информацию о полученном товаре
+    def __init__(self, url, key_word, result):
+        self.url = url
+        self.key_word = key_word
         self.result = result
+
+
+class ResultModel:
+
+    # full_name - полное название товара
+    # price - цена товара в рублях
+    # per - количество товара за его цену (шт, кг...)
+    # rating - рейтинг товара
+    # available_at - список магазинов/складов, в которых присутствует данный товар
+    def __init__(self, full_name, price, per, rating, available_at):
+        self.full_name = full_name
+        self.price = price
+        self.per = per
+        self.rating = rating
+        self.available_at = available_at

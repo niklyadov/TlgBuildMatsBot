@@ -1,4 +1,4 @@
-from users import Users
+from Users import Users
 
 
 class UserModel:
