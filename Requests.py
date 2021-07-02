@@ -17,3 +17,10 @@ class Requests:
             dbc.row_factory = lambda cursor, row: row[0]
             cursor = dbc.cursor()
             return cursor.execute("select result from requests where user_id = ?", (user_id,)).fetchall()
+
+    @staticmethod
+    def get_last_day_requests():
+        with sqlite3.connect("main.db") as dbc:
+            dbc.row_factory = lambda cursor, row: row[0]
+            cursor = dbc.cursor()
+            return cursor.execute("select result from requests where julianday() - julianday(date) < 1").fetchall()

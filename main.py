@@ -1,4 +1,6 @@
 import telebot
+import BestFinder
+import Settings
 
 import users
 
@@ -14,7 +16,31 @@ def start_command(message):
         _users.register_user(uid)
         _bot.reply_to(message, "Вы были зарегистрированы!")
 
-    _bot.reply_to(message, "Для поиска необходимых материалов,\nвведите команду /search")
+    _bot.reply_to(message, "Для поиска необходимых материалов,\nвведите команду '/search [запрос]")
+
+
+@_bot.message_handler(regexp="/search$")
+def search_command(message):
+    _bot.reply_to(message, "Для поиска необходимых материалов,\nвведите команду '/search [запрос]")
+
+
+
+# TODO - сделать нормальный вывод
+@_bot.message_handler(regexp="/search [а-яА-Я \-]*")
+def search_word_command(message):
+    uid = message.from_user.id
+    settings = Settings.Settings.get_settings(uid)
+    bf = BestFinder.BestFinder(settings[0], settings[1])
+    top = bf.find_best(message.text[8:])
+    msg = ""
+    if len(top) == 0:
+        _bot.reply_to(message, "Ничего не найдено")
+    else:
+        for item in top:
+            msg += "{}:\nЦена: {} за {}\nДоступно в {}\nРейтинг: {}\n{}\n\n".format(item.name, item.price, item.per, item.available_at, item.rating, item.url)
+
+        _bot.reply_to(message, msg)
+
 
 
 @_bot.message_handler(commands=['myrole'])
@@ -28,6 +54,7 @@ def my_role_command(message):
             _bot.reply_to(message, "Вы обычный пользователь")
     else:
         _bot.reply_to(message, "Вы не зарегистрированы. Как вы это сделали?")
+
 
 @_bot.message_handler(commands=['test'])
 def test(message):
