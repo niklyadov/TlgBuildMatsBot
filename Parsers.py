@@ -33,7 +33,7 @@ class RadugastroyParser(Parser):
             print(name + " (" + price + ")  " + in_stock)
 
 
-class SdvorParser:
+class SdvorParser(Parser):
 
     @staticmethod
     def search(search_word):
@@ -54,7 +54,7 @@ class SdvorParser:
             print(name + " (" + price + ")  " + in_stock)
 
 
-class Sb1Parser:
+class Sb1Parser(Parser):
 
     @staticmethod
     def search(search_word):
