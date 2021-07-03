@@ -162,6 +162,41 @@ def set_admin_command(message):
     _bot.reply_to(message, "✅ пользователь " + str(target_uid) + " теперь является администратором.")
 
 
+@_bot.message_handler(commands=['unsetadmin'])
+def set_admin_command(message):
+    uid = message.from_user.id
+
+    if not _users.is_registered(uid) or not _users.is_admin(uid):
+        return
+
+    if not _users.is_super_user(uid):
+        _bot.reply_to(message, "❕ Вы должны быть суперпользователем")
+        return
+
+    if len(message.text) <= len('/unsetadmin '):
+        _bot.reply_to(message, "❕ Синтаксис команды: \n/unsetadmin [id юзера]")
+        return
+
+    target_uid = message.text[len('/unsetadmin '):]
+
+    if not target_uid.isnumeric():
+        _bot.reply_to(message, "❌ Неправильный user id.")
+        return
+
+    target_uid = int(target_uid)
+
+    if not _users.is_registered(target_uid):
+        _bot.reply_to(message, "❌ Этот пользователь не зарегистрирован.")
+        return
+
+    if not _users.is_admin(target_uid):
+        _bot.reply_to(message, "❌ Этот пользователь не является администратором.")
+        return
+
+    _users.set_user_role(uid, int(target_uid), 3)
+    _bot.reply_to(message, "✅ пользователь " + str(target_uid) + " теперь не является администратором.")
+
+
 # TODO !требуется тестирование!
 @_bot.message_handler(commands=['superusertransfer'])
 def set_admin_command(message):
@@ -188,8 +223,8 @@ def set_admin_command(message):
     user_uid = int(user_uid)
 
     if not user_uid == uid:
-        _bot.reply_to(message, "❌ Подтверждающий id пользователя не верный.")
-        _bot.reply_to(message, "❌ Вы должны ввести свой user id для подтверждения ({}).".format(uid))
+        _bot.reply_to(message, "❌ Подтверждающий id пользователя не верный.\n"
+                               "Вы должны ввести свой user id для подтверждения ({}).".format(uid))
         return
 
     if not _users.is_registered(target_uid):
