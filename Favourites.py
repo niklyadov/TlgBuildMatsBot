@@ -1,5 +1,7 @@
 import sqlite3
 
+from JSON_Converter import JSON_Converter
+
 
 class Favourites:
 
@@ -24,6 +26,10 @@ class Favourites:
         with sqlite3.connect("main.db") as dbc:
             dbc.row_factory = lambda cursor, row: row[0]
             cursor = dbc.cursor()
-            return cursor.execute(
-                "select result from requests where request_id = (select request_id from favourites where user_id = ?)",
+            json_result = cursor.execute(
+                "select date, result from requests where id = (select request_id from favourites where user_id = ?)",
                 (user_id,)).fetchall()
+            result = {}
+            for item in json_result:
+                result[item[0]] = JSON_Converter.deserialize(item[1])
+            return result

@@ -20,9 +20,13 @@ class Requests:
         with sqlite3.connect("main.db") as dbc:
             dbc.row_factory = lambda cursor, row: row[0]
             cursor = dbc.cursor()
-            return cursor.execute(
-                "select result from requests where user_id = ?",
+            json_result = cursor.execute(
+                "select date, result from requests where user_id = ?",
                                   (user_id,)).fetchall()
+            result = {}
+            for item in json_result:
+                result[item[0]] = JSON_Converter.deserialize(item[1])
+            return result
 
     @staticmethod
     def get_last_day_requests_by_key_word(key_word):
