@@ -1,8 +1,6 @@
-import Requests
-import JSON_Converter
-import Key_Words
-import RequestModel
-import Logs
+from Models import RequestModel
+from DB.DbContexsts import Logs
+
 
 class BestFinder:
 
@@ -14,8 +12,9 @@ class BestFinder:
     # возвращает список RequestModel, отсортированный по ordering и ограниченный top_count
     def find_best(self, search_word):
        #db_items = JSON_Converter.JSON_Converter.deserialize(Requests.Requests.get_last_day_requests_by_search_word(search_word))
-        db_items = [RequestModel.RequestModel("кирпич", "http://www.stackoverflow.com", 'кирпич обыкновенный', 12.4, 'шт', 5, ['ЧЛБ', 'ЕКБ']),
-                    RequestModel.RequestModel("камень", "http://www.stackoverflow.com", 'камень необыкновенный 10000', 1023.4, 'кг', 5, ['ЧЛБ', 'ЕКБ', 'МСК'])]
+        db_items = [
+            RequestModel.RequestModel("кирпич", "http://www.stackoverflow.com", 'кирпич обыкновенный', 12.4, 'шт', 5, ['ЧЛБ', 'ЕКБ']),
+            RequestModel.RequestModel("камень", "http://www.stackoverflow.com", 'камень необыкновенный 10000', 1023.4, 'кг', 5, ['ЧЛБ', 'ЕКБ', 'МСК'])]
 
         if self.ordering == 1:
             sorted(db_items, key=lambda key: key.price)

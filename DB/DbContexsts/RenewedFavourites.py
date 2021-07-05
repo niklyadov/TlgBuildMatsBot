@@ -6,7 +6,7 @@ class RenewedFavourites:
     # полностью очищает таблицу Renewed_Favourites
     @staticmethod
     def clear_renewed_favourites():
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             dbc.execute(
                 "delete from renewed_favourites")
             dbc.commit()
@@ -14,7 +14,7 @@ class RenewedFavourites:
     # возвращает список избранного пользователей, на которых изменилась цена
     @staticmethod
     def get_renewed_favourites():
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
                 "select favourite_id from renewed_favourites").fetchall()

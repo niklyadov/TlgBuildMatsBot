@@ -1,18 +1,10 @@
 import telebot
-import BestFinder
-import Favourites
-import Key_Words
-import Parsers
-import Settings
-import Requests
-import HistoryAppender
+from Logic import BestFinder, HistoryAppender, Parsers
 import schedule
-import Logs
-import RenewedFavourites
 import threading
 import time
 
-import Users
+from DB.DbContexsts import Users, Settings, Requests, RenewedFavourites, Logs, Key_Words, Favourites
 
 _bot = telebot.TeleBot('1898682710:AAGGjRKCbh3a2zPzylGSqQ_Se9x3xSCPBBM')
 _users = Users.Users()

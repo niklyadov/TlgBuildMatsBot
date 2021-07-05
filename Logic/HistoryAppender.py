@@ -1,5 +1,4 @@
-import Requests
-import Key_Words
+from DB.DbContexsts import Requests, Key_Words
 import threading
 
 

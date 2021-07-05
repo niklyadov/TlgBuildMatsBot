@@ -1,6 +1,6 @@
 import sqlite3
-import StatisticModel
-import JSON_Converter
+from Models import StatisticModel
+from Utils import JSON_Converter
 
 
 class Logs:
@@ -8,7 +8,7 @@ class Logs:
     # добавляет лог в базу
     @staticmethod
     def log(search_word, request, message, user_id):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             dbc.execute(
                 "insert into logs(search_word, request_id, message_id, user_id) values (?, ?,(select id from messages where message = ?), ?);",
                 (search_word, request, message, user_id))
@@ -17,7 +17,7 @@ class Logs:
     # возвращает статистику количества запросов пользователей по дням
     @staticmethod
     def get_requests_statistics_history(days_count):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
                 "select round(julianday(date)), count() from logs where julianday() - julianday(date) < ? group by round(julianday(date))",
@@ -30,7 +30,7 @@ class Logs:
     # возвращает список реквестов пользователя
     @staticmethod
     def get_user_requests_history(user_id):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             json_result = cursor.execute(
                 "select date, (select result from requests where id = request_id) from logs where user_id = ?",

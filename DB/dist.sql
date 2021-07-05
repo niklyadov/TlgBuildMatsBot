@@ -135,13 +135,13 @@ create trigger renew_favourites_on_request_insert
          where l.id in (select f.log_id from favourites f))
 begin
     insert into Renewed_Favourites (user_id, full_name)
-    values (select l.user_id
+    values ((select l.user_id
             from logs l
             where l.request_id in (
                 select r.id
                 from requests r
-                where r.full_name = new.full_name))),
-            new.full_name)
+                where r.full_name = new.full_name)),
+            new.full_name);
 end;
 
 -- Key_Words -----------------------------------------------------------------------------------------------------------
@@ -211,5 +211,5 @@ create table Renewed_Favourites (
     id integer primary key,
     user_id integer not null,
     full_name text not null,
-    foreign key (user_id) references Users(telegram_id),
+    foreign key (user_id) references Users(telegram_id)
 )

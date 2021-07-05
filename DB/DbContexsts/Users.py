@@ -1,5 +1,5 @@
 import sqlite3
-import StatisticModel
+from Models import StatisticModel
 
 
 class Users:
@@ -7,7 +7,7 @@ class Users:
     # проверка на наличие пользователя в базе
     @staticmethod
     def is_registered(id):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             cr = dbc.cursor()
             cr.execute(
                 "SELECT count(*) FROM Users WHERE telegram_id = ?",
@@ -17,7 +17,7 @@ class Users:
     # проверка на супер-юзера
     @staticmethod
     def is_super_user(id):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             cr = dbc.cursor()
             cr.execute(
                 "SELECT count(*) FROM Users WHERE telegram_id = ? and role_id = 1",
@@ -27,7 +27,7 @@ class Users:
     # проверка на админа
     @staticmethod
     def is_admin(id):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             cr = dbc.cursor()
             cr.execute(
                 "SELECT count(*) FROM Users WHERE telegram_id = ? and role_id <= 2",
@@ -41,7 +41,7 @@ class Users:
             if role == 1:
                 Users.transfer_super_user_rights(super_user_id, user_id)
             else:
-                with sqlite3.connect("main.db") as dbc:
+                with sqlite3.connect("DB/main.db") as dbc:
                     dbc.execute(
                         "UPDATE Users SET role_id = ? where telegram_id = ?",
                         (role, user_id))
@@ -51,7 +51,7 @@ class Users:
     @staticmethod
     def transfer_super_user_rights(super_user_id, user_id):
         if Users.is_super_user(super_user_id):
-            with sqlite3.connect("main.db") as dbc:
+            with sqlite3.connect("DB/main.db") as dbc:
                 dbc.execute(
                     "UPDATE Users SET role_id = 1 where telegram_id = ?",
                     (user_id,))
@@ -63,7 +63,7 @@ class Users:
     # добавление пользователя в базу
     @staticmethod
     def register_user(id):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             dbc.execute(
                 "INSERT INTO Users (telegram_id, role_id) VALUES(?, 3);",
                 (id,))
@@ -72,7 +72,7 @@ class Users:
     # возвращает список всех зарегестрированных пользователей
     @staticmethod
     def get_all_users():
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             cr = dbc.cursor()
             return cr.execute(
                 "select telegram_id, (select name from roles where id = role_id), start_date from users").fetchall()
@@ -80,7 +80,7 @@ class Users:
     # возвращает статистику по количеству зарегистрированных пользователей по дням
     @staticmethod
     def get_users_statistics_history(days_count):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
                 "select round(julianday(start_date)), count() from users where julianday() - julianday(start_date) < ? group by round(julianday(start_date))",

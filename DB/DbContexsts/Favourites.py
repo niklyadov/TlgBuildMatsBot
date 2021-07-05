@@ -1,6 +1,6 @@
 import sqlite3
 
-from JSON_Converter import JSON_Converter
+from Utils.JSON_Converter import JSON_Converter
 
 
 class Favourites:
@@ -8,7 +8,7 @@ class Favourites:
     # добавление реквеста в избранное
     @staticmethod
     def add_request_to_favourites(user_id, full_name):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             dbc.execute(
                 "insert into favourites (log_id) values ((select id from logs where user_id = ? and result like '%'||?||'%'))",
                 (user_id, full_name))
@@ -17,7 +17,7 @@ class Favourites:
     # удаление реквеста из избранного
     @staticmethod
     def remove_request_from_favourites(user_id, full_name):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             dbc.execute(
                 "delete from favourites where log_id = (select id from logs where user_id = ? and result like '%'||?||'%')",
                 (user_id, full_name))
@@ -26,7 +26,7 @@ class Favourites:
     # возвращает список избранного данного пользователя
     @staticmethod
     def get_user_favourites(user_id):
-        with sqlite3.connect("main.db") as dbc:
+        with sqlite3.connect("DB/main.db") as dbc:
             dbc.row_factory = lambda cursor, row: row[0]
             cursor = dbc.cursor()
             json_result = cursor.execute(

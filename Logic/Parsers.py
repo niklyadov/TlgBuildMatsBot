@@ -1,11 +1,10 @@
 import json
-import venv
 
 import requests
 from bs4 import BeautifulSoup
 
 # TODO - Никита, если не сложно можешь подогнать методы search так, чтобы они возвращали объекты класса ResultModel :)
-from RequestModel import RequestModel
+from Models.RequestModel import RequestModel
 
 
 class Parser:
