@@ -17,4 +17,5 @@ def get_key_word(string):
             return word
 
 
-key_words = get_key_words()
+#key_words = get_key_words()
+key_words = ['камень', 'кирпич', 'бетон']

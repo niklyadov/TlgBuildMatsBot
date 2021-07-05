@@ -123,15 +123,23 @@ def favourites_command(message):
             _bot.send_message(message.chat.id, msg, reply_markup=markup)
 
 
+days_count = 0
+
+
 # команда, позволяющая посмотреть как изменялась цена на определенную категорию по дням
-# TODO - сделать нормальный вывод
 @_bot.message_handler(commands="pricehistory")
 def price_history_command(message):
-    # TODO - добавить выбор категории (ключевого слова) по кнопкам и вывод графика
-    # days_count = message.text[len('/pricehistory '):]
-    # key_word = (magic button)
-    # Requests.Requests.get_price_statistics_history(key_word, days_count)
-    pass
+    days_count = message.text[len('/pricehistory '):]
+    if not days_count.isnumeric() or len(message.text) <= len('/pricehistory '):
+        _bot.reply_to(message, 'Для получения статистики по ценам используйте команду\n/pricehistory *промежуток времени до сегоднящнего дня в днях*')
+        return
+
+    key_words = Key_Words.key_words
+    markup = telebot.types.InlineKeyboardMarkup()
+    for word in key_words:
+        markup.add(telebot.types.InlineKeyboardButton(text=word,
+                                              callback_data="{}_category".format(word)))
+    _bot.send_message(message.chat.id, 'Выберите категорию: ', reply_markup=markup)
 
 
 # команда, позволяющая узнать, какая роль у пользователя
@@ -312,31 +320,44 @@ def test_command(message):
     pass
 
 
-@_bot.callback_query_handler(func=lambda c: True)
-def inlin(c):
+@_bot.callback_query_handler(func=lambda c: 'favourites' in c.data)
+def favourites_buttons_handler(c):
+    uid = c.from_user.id
+    json = c.message.json['text']
+    full_name = json.split('\n')[0][3:]
     if c.data == 'add_to_favourites':
-        uid = c.from_user.id
-        json = c.message.json['text']
-        full_name = json.split('\n')[0][3:]
         Favourites.Favourites.add_request_to_favourites(uid, full_name)
     if c.data == 'remove_from_favourites':
-        uid = c.from_user.id
-        json = c.message.json['text']
-        full_name = json.split('\n')[0][3:]
         Favourites.Favourites.remove_request_from_favourites(uid, full_name)
+
+
+@_bot.callback_query_handler(func=lambda c: 'category' in c.data)
+def favourites_buttons_handler(c):
+    category = c.data.split('_')[0]
+    show_history(c, category, Requests.Requests.get_price_statistics_history(category, days_count))
+
+
+def show_history(c, category, data):
+    msg = data  # TODO - обработать вывод данных по графику
+    _bot.send_message(c.from_user.id, msg)
+    pass
 
 
 def prepare_msg(line, counter):
     msg = ""
-    result = line['result']
     msg += '#{} '.format(counter)
-    msg += ' {}\n'.format(result['full_name'])
-    msg += 'Цена: {} за {}\n'.format(result['price'], result['per'])
-    msg += 'Рейтинг: {}\n'.format(result['rating'])
+    msg += ' {}\n'.format(line.full_name)
+    msg += 'Цена: {}'.format(line.price)
+    if line.per is not None:
+        msg += ' за {}'.format(line.per)
+    msg += '\n'
+    if line.rating is None:
+        line.rating = 'отсутствует'
+    msg += 'Рейтинг: {}\n'.format(line.rating)
     msg += 'Доступно в:\n'
-    for available_at in result['available_at']:
+    for available_at in line.available_at:
         msg += ' -- {}\n'.format(available_at)
-    msg += result['url']
+    msg += line.url
     msg += '\n\n'
     return msg
 
