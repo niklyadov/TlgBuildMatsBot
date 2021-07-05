@@ -11,9 +11,13 @@ class HistoryAppender:
         Requests.Requests.add_request(parser.search(key_word))
 
     def append_history(self):
+        threads = []
         for parser in self.parsers:
             for key_word in Key_Words.key_words:
                 thread = threading.Thread(target=self.append, args=(parser, key_word))
+                threads.append(thread)
                 thread.start()
+        for th in threads:
+            th.join()
 
 
