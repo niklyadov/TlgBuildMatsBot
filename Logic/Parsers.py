@@ -64,9 +64,13 @@ class SdvorParser(Parser):
             soup = BeautifulSoup(html, "html.parser")
             for block in soup.find_all("div", {"class": "w1l5ijvb p4t3w1l".split()}):
                 link = block.find("div", {"class": "i1b5ubz7"}).find("a")
-                name = link.text
-                price = block.find("span", {"class": "p1hbhc78"}).text
                 url = link.get('href')
+                name = link.text
+
+                price_elem = block.find("span", {"class": "p1hbhc78"})
+                if price_elem is None:
+                    continue
+                price = price_elem.text.replace(' ₽', '')
 
                 result.append(RequestModel(
                     search_word,
@@ -89,12 +93,6 @@ class Sb1Parser(Parser):
         soup = BeautifulSoup(html, "html.parser")
 
         addresses = []
-        for city in soup.find('div', {'class': 'region_wrapper'}).find('div', {'ul': 'wrap'}).find_all('li', {
-            'class': 'more_item has-sub'}):
-            city_name = city.find('a', {'class': 'item none_click'.split()})
-            for addresses_json in city.find('div', {'class': 'sub'}).find_all('li'):
-                address_name = addresses_json.find('a', {'class': 'item'}).text
-                addresses.append(city_name + " " + address_name)
 
         result = []
         for block in soup.find_all("div", {"class": "item_block"}):
