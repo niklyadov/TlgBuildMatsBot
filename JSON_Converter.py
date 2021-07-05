@@ -1,13 +1,19 @@
-from json import JSONDecoder as decoder
-from json import JSONEncoder as encoder
+import json
 
 
 class JSON_Converter:
 
+    # возвращает json-сериализованную версию объекта
     @staticmethod
-    def serialize(object):
-        return encoder.encode(object)
+    def serialize(obj):
+        return json.dumps(obj, cls=MyEncoder)
 
+    # возвращает python-десериализованную версию json-строки
     @staticmethod
     def deserialize(json_string):
-        return decoder.decode(json_string)
+        return json.loads(json_string)
+
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__

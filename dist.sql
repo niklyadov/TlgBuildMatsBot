@@ -97,23 +97,12 @@ end;
 
 create table Requests (
     id integer primary key,
-    user_id integer not null,
     date text,
     full_name text not null,
     key_word_id integer not null,
     result text not null,
-    foreign key (key_word_id) references key_words(id),
-    foreign key (user_id) references users(telegram_id)
+    foreign key (key_word_id) references key_words(id)
 );
-
--- может быть очень ресурсозатратно --------------------------------
-create trigger check_on_request_insert                            --
-    before insert on settings                                     --
-begin                                                             --
-    select raise(abort, 'User does not exist.')                   --
-        where new.user_id not in (select telegram_id from users); --
-end;                                                              --
---------------------------------------------------------------------
 
 create trigger error_on_request_update
     before update on settings
@@ -126,26 +115,12 @@ create trigger set_datetime_now_on_request_insert
 begin
     delete from requests where id = new.id;
     insert
-        into requests (id, user_id, date, result)
+        into requests (id, date, result)
         values
         (
             new.id,
-            new.user_id,
             strftime('%Y-%m-%d %H:%M:%S', datetime('now')),
             new.result
-        );
-end;
-
-create trigger log_on_request_insert
-    after insert on requests
-begin
-    insert
-        into logs (request_id, message_id)
-        values
-        (
-            new.id,
-            (select id from messages
-                where message = (case when rowid = -1 then 'error' else 'successful' end))
         );
 end;
 
@@ -161,25 +136,9 @@ create table Key_Words (
 
 create table Favourites (
     id integer primary key,
-    request_id integer not null,
-    foreign key (request_id) references requests(id)
+    log_id integer not null,
+    foreign key (log_id) references requests(id)
 );
-
--- может быть очень ресурсозатратно -----------------------------
-create trigger check_on_favourites_insert                      --
-    before insert on favourites                                --
-begin                                                          --
-    select raise(abort, 'Role does not exist.')                --
-        where new.request_id not in (select id from requests); --
-end;                                                           --
-                                                               --
-create trigger check_on_favourites_update                      --
-    before update on favourites                                --
-begin                                                          --
-    select raise(abort, 'Role does not exist.')                --
-        where new.request_id not in (select id from requests); --
-end;                                                           --
------------------------------------------------------------------
 
 -- Messages ------------------------------------------------------------------------------------------------------------
 
@@ -195,19 +154,19 @@ insert into messages (message) values ('successful');
 
 create table Logs (
     id integer primary key,
+    date text,
+    search_word integer not null,
+    user_id integer not null,
     request_id integer not null,
     message_id integer not null,
-    foreign key (request_id) references requests(id),
+    foreign key (user_id) references users(telegram_id),
+    foreign key (request_id) references Requests(id),
     foreign key (message_id) references messages(id)
 );
 
 create trigger check_on_logs_insert
     before insert on logs
 begin
-    -- может быть очень ресурсозатратно -------------------------
-    select raise(abort, 'Role does not exist.')                --
-        where new.request_id not in (select id from requests); --
-    -------------------------------------------------------------
     select raise(abort, 'Message does not exist.')
         where new.message_id not in (select id from messages);
 end;
@@ -215,10 +174,14 @@ end;
 create trigger check_on_logs_update
     before update on logs
 begin
-    -- может быть очень ресурсозатратно -------------------------
-    select raise(abort, 'Role does not exist.')                --
-        where new.request_id not in (select id from requests); --
-    -------------------------------------------------------------
     select raise(abort, 'Message does not exist.')
         where new.message_id not in (select id from messages);
 end;
+
+create trigger set_datetime_now_on_log_insert
+    after insert on logs
+begin
+    update logs
+        set date = strftime('%Y-%m-%d %H:%M:%S', datetime('now')) where id = new.id;
+end;
+

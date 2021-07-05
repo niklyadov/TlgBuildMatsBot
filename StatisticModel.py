@@ -1,6 +1,6 @@
 
 
 class StatisticModel:
-    def __init__(self, date, price):
+    def __init__(self, date, count):
         self.date = date
-        self.price = price
+        self.count = count

@@ -1,4 +1,5 @@
 import sqlite3
+import StatisticModel
 
 
 class Users:
@@ -68,9 +69,23 @@ class Users:
                 (id,))
             dbc.commit()
 
+    # возвращает список всех зарегестрированных пользователей
     @staticmethod
     def get_all_users():
         with sqlite3.connect("main.db") as dbc:
             cr = dbc.cursor()
             return cr.execute(
                 "select telegram_id, (select name from roles where id = role_id), start_date from users").fetchall()
+
+    # возвращает статистику по количеству зарегистрированных пользователей по дням
+    @staticmethod
+    def get_users_statistics_history():
+        with sqlite3.connect("main.db") as dbc:
+            cursor = dbc.cursor()
+            db_result = cursor.execute(
+                "select round(julianday(start_date)), count() from users group by round(julianday(start_date))").fetchall()
+            stat = []
+            for line in db_result:
+                stat.append(StatisticModel.StatisticModel(line[0], line[1]))
+        return stat
+

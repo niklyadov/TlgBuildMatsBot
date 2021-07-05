@@ -3,6 +3,7 @@ import BestFinder
 import Favourites
 import Settings
 import Requests
+import Logs
 
 import Users
 
@@ -10,6 +11,7 @@ _bot = telebot.TeleBot('1898682710:AAGGjRKCbh3a2zPzylGSqQ_Se9x3xSCPBBM')
 _users = Users.Users()
 
 
+# команда начала работы с ботом
 @_bot.message_handler(commands=['start'])
 def start_command(message):
     uid = message.from_user.id
@@ -21,6 +23,7 @@ def start_command(message):
     _bot.reply_to(message, "Для поиска необходимых материалов,\nвведите команду '/search [запрос]")
 
 
+# команда, позволяющая искать товары
 # TODO - сделать нормальный вывод
 @_bot.message_handler(commands="search")
 def search_word_command(message):
@@ -30,7 +33,7 @@ def search_word_command(message):
 
     uid = message.from_user.id
     settings = Settings.Settings.get_settings(uid)
-    bf = BestFinder.BestFinder(settings[0], settings[1])
+    bf = BestFinder.BestFinder(settings[0], settings[1], uid)
     top = bf.find_best(message.text[8:])
     msg = ""
     if len(top) == 0:
@@ -44,6 +47,8 @@ def search_word_command(message):
     _bot.reply_to(message, msg)
 
 
+# команда, позволяющая посмотреть историю поисков
+# (для обычного пользователя - только свою, для админа - любого пользователя)
 # TODO - сделать нормальный вывод
 # TODO - возможно добавить кнопку "добавить в избранное"
 @_bot.message_handler(commands="history")
@@ -58,17 +63,30 @@ def history_command(message):
         id = uid
         msg += "Ваша история:\n\n"
 
-    history = Requests.Requests.get_user_requests_history(id)
+    history = Logs.Logs.get_user_requests_history(id)
     if len(history) == 0:
         _bot.reply_to(message, "История не найдена")
         return
 
-    for request in history:
-        msg += request.key + "\n" + request.value.full_name + "\n" + request.value.url + "\n\n"
-
     _bot.reply_to(message, msg)
+    for date, request in history.items():
+
+        _bot.reply_to(message, 'Запрос от ' + date + ':')
+        counter = 1
+
+        for line in request:
+            msg = prepare_msg(line, counter)
+            counter += 1
+
+            markup = telebot.types.InlineKeyboardMarkup()
+            btn = telebot.types.InlineKeyboardButton(text="Добавить в избранное", reply_markup=markup,
+                                                             callback_data="add_to_favourites")
+            markup.add(btn)
+            _bot.send_message(message.chat.id, msg, reply_markup = markup)
 
 
+# команда, позволяющая посмотреть список избранного
+# (для обычного пользователя - только свой, для админа - любого пользователя)
 # TODO - сделать нормальный вывод
 # TODO - возможно добавить кнопку "убрать из избранного"
 @_bot.message_handler(commands="favourites")
@@ -88,19 +106,47 @@ def favourites_command(message):
         _bot.reply_to(message, "Избранное не найдено")
         return
 
-    for request in favourites:
-        msg += request.key + "\n" + request.value.full_name + "\n" + request.value.url + "\n\n"
-
     _bot.reply_to(message, msg)
+    for date, request in favourites.items():
+
+        _bot.reply_to(message, 'Запрос от ' + date + ':')
+        counter = 1
+
+        for line in request:
+            msg = prepare_msg(line, counter)
+            counter += 1
+
+            markup = telebot.types.InlineKeyboardMarkup()
+            btn = telebot.types.InlineKeyboardButton(text="Убрать из избранного", reply_markup=markup,
+                                                     callback_data="remove_from_favourites")
+            markup.add(btn)
+            _bot.send_message(message.chat.id, msg, reply_markup=markup)
 
 
+# команда, позволяющая посмотреть как изменялась цена на определенную категорию по дням
 # TODO - сделать нормальный вывод
 @_bot.message_handler(commands="pricehistory")
 def price_history_command(message):
     # TODO - добавить выбор категории (ключевого слова) по кнопкам и вывод графика
+    # Requests.Requests.get_price_statistics_history()
     pass
 
 
+# команда, позволяющая узнать, какая роль у пользователя
+@_bot.message_handler(commands=['myrole'])
+def my_role_command(message):
+    uid = message.from_user.id
+
+    if _users.is_registered(uid):
+        if _users.is_admin(uid):
+            _bot.reply_to(message, "Вы админ")
+        else:
+            _bot.reply_to(message, "Вы обычный пользователь")
+    else:
+        _bot.reply_to(message, "Вы не зарегистрированы. Как вы это сделали?")
+
+
+# команда, позволяющая админу увидеть весь список пользоваетелей
 @_bot.message_handler(commands="users")
 def admin_users_command(message):
     uid = message.from_user.id
@@ -117,25 +163,33 @@ def admin_users_command(message):
     _bot.reply_to(message, msg)
 
 
-@_bot.message_handler(commands=['myrole'])
-def my_role_command(message):
-    uid = message.from_user.id
-
-    if _users.is_registered(uid):
-        if _users.is_admin(uid):
-            _bot.reply_to(message, "Вы админ")
-        else:
-            _bot.reply_to(message, "Вы обычный пользователь")
-    else:
-        _bot.reply_to(message, "Вы не зарегистрированы. Как вы это сделали?")
+# команда, позволяющая админу увидеть график количества зарегистрированных пользователей по дням
+@_bot.message_handler(commands="usershistory")
+def admin_users_history_command(message):
+    # TODO - сделать вывод графика зарегистрированных пользователей по дням
+    # Users.Users.get_users_statistics_history()
+    pass
 
 
+# команда, позволяющая админу увидеть график количества запросов пользователей по дням
+@_bot.message_handler(commands="requestshistory")
+def admin_requests_history_command(message):
+    # TODO - сделать вывод графика запросов от пользователей по дням
+    # Logs.Logs.get_requests_statistics_history()
+    pass
+
+
+# команда, позволяющая супер-юзеру установить другому пользователю роль админа
 # TODO !требуется тестирование!
 @_bot.message_handler(commands=['setadmin'])
-def set_admin_command(message):
+def super_user_set_admin_command(message):
     uid = message.from_user.id
 
     if not _users.is_registered(uid) or not _users.is_admin(uid):
+        return
+
+    if not _users.is_super_user(uid):
+        _bot.reply_to(message, "❕ Вы должны быть суперпользователем")
         return
 
     if len(message.text) <= len('/setadmin '):
@@ -162,8 +216,9 @@ def set_admin_command(message):
     _bot.reply_to(message, "✅ пользователь " + str(target_uid) + " теперь является администратором.")
 
 
+# команда, позволяющая супер-юзеру установить другому пользователю роль обычного пользователя
 @_bot.message_handler(commands=['unsetadmin'])
-def set_admin_command(message):
+def super_user_unset_admin_command(message):
     uid = message.from_user.id
 
     if not _users.is_registered(uid) or not _users.is_admin(uid):
@@ -197,9 +252,10 @@ def set_admin_command(message):
     _bot.reply_to(message, "✅ пользователь " + str(target_uid) + " теперь не является администратором.")
 
 
+# команда, позволяющая супер-юзеру передать права супер-юзера другому пользователю
 # TODO !требуется тестирование!
 @_bot.message_handler(commands=['superusertransfer'])
-def set_admin_command(message):
+def super_user_transfer_command(message):
     uid = message.from_user.id
 
     if not _users.is_registered(uid) or not _users.is_admin(uid):
@@ -240,19 +296,35 @@ def set_admin_command(message):
 
 
 @_bot.message_handler(commands=['test'])
-def test(message):
-    stringList = {"Name": "John", "Language": "Python", "API": "pyTelegramBotAPI"}
-    crossIcon = u"\u274C"
-    markup = telebot.types.InlineKeyboardMarkup()
+def test_command(message):
+    pass
 
-    for key, value in stringList.items():
-        markup.add(telebot.types.InlineKeyboardButton(text=value,
-                                              callback_data="['value', '" + value + "', '" + key + "']"),
-                   telebot.types.InlineKeyboardButton(text=crossIcon,
-                                              callback_data="['key', '" + key + "']"))
-    _bot.send_message(chat_id=message.chat.id,
-                     text="Here are the values of stringList",
-                     reply_markup=markup,
-                     parse_mode='HTML')
+
+@_bot.callback_query_handler(func=lambda c:True)
+def inlin(c):
+    uid = c.from_user.id
+    json = c.message.json['text']
+    full_name = json.split('\n')[0][3:]
+    if c.data == 'add_to_favourites':
+        Favourites.Favourites.add_request_to_favourites(uid, full_name)
+    if c.data == 'remove_from_favourites':
+        Favourites.Favourites.remove_request_from_favourites(uid, full_name)
+
+
+
+def prepare_msg(line, counter):
+    msg = ""
+    result = line['result']
+    msg += '#{} '.format(counter)
+    msg += ' {}\n'.format(result['full_name'])
+    msg += 'Цена: {} за {}\n'.format(result['price'], result['per'])
+    msg += 'Рейтинг: {}\n'.format(result['rating'])
+    msg += 'Доступно в:\n'
+    for available_at in result['available_at']:
+        msg += ' -- {}\n'.format(available_at)
+    msg += result['url']
+    msg += '\n\n'
+    return msg
+
 
 _bot.polling()
