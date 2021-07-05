@@ -16,11 +16,12 @@ class Logs:
 
     # возвращает статистику количества запросов пользователей по дням
     @staticmethod
-    def get_requests_statistics_history():
+    def get_requests_statistics_history(days_count):
         with sqlite3.connect("main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
-                "select round(julianday(date)), count() from logs group by round(julianday(date))").fetchall()
+                "select round(julianday(date)), count() from logs where julianday() - julianday(date) < ? group by round(julianday(date))",
+                (days_count, )).fetchall()
             stat = []
             for line in db_result:
                 stat.append(StatisticModel.StatisticModel(line[0], line[1]))

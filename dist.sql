@@ -87,8 +87,8 @@ begin
     select raise(abort, 'User does not exist.')                   --
         where new.user_id not in (select telegram_id from users); --
     ----------------------------------------------------------------
-    select raise(abort, 'Top count must be greater than 0 and lesser or equal than 10.')
-        where new.top_count <= 0 or new.top_count > 10;
+    select raise(abort, 'Top count must be greater than 0 and lesser than 10.')
+        where new.top_count <= 0 or new.top_count > 9;
     select raise(abort, 'Ordering does not exist.')
         where new.ordering_id not in (select id from ordering);
 end;

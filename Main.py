@@ -46,8 +46,7 @@ def search_word_command(message):
         return
 
     for item in top:
-        result = item.result
-        msg += "{}:\nЦена: {} за {}\nДоступно в {}\nРейтинг: {}\n{}\n\n".format(result.full_name, result.price, result.per, result.available_at, result.rating, result.url)
+        msg += "{}:\nЦена: {} за {}\nДоступно в {}\nРейтинг: {}\n{}\n\n".format(item.full_name, item.price, item.per, item.available_at, item.rating, item.url)
 
     _bot.reply_to(message, msg)
 
@@ -129,7 +128,7 @@ def favourites_command(message):
 @_bot.message_handler(commands="pricehistory")
 def price_history_command(message):
     # TODO - добавить выбор категории (ключевого слова) по кнопкам и вывод графика
-    # days_count = message.text[len('/pricehistory ']:]
+    # days_count = message.text[len('/pricehistory '):]
     # key_word = (magic button)
     # Requests.Requests.get_price_statistics_history(key_word, days_count)
     pass
@@ -174,7 +173,8 @@ def admin_users_history_command(message):
         return
 
     # TODO - сделать вывод графика зарегистрированных пользователей по дням
-    # Users.Users.get_users_statistics_history()
+    # days_count = message.text[len('/usershistory '):]
+    # Users.Users.get_users_statistics_history(days_count)
     pass
 
 
@@ -186,7 +186,8 @@ def admin_requests_history_command(message):
         return
 
     # TODO - сделать вывод графика запросов от пользователей по дням
-    # Logs.Logs.get_requests_statistics_history()
+    # days_count = message.text[len('/requestshistory '):]
+    # Logs.Logs.get_requests_statistics_history(days_count)
     pass
 
 
