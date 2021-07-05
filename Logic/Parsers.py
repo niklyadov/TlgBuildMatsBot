@@ -1,9 +1,6 @@
 import json
-
 import requests
 from bs4 import BeautifulSoup
-
-# TODO - Никита, если не сложно можешь подогнать методы search так, чтобы они возвращали объекты класса ResultModel :)
 from Models.RequestModel import RequestModel
 
 
@@ -19,7 +16,7 @@ class RadugastroyParser(Parser):
     @staticmethod
     def search(search_word):
         html = requests.get('https://radugastroy.ru/search/?module=search&action=search&searchword=' + search_word).text
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, "html.parser")
 
         address = soup.find('div', {'class': 'siteFooter-address'}).text
 
@@ -40,7 +37,7 @@ class RadugastroyParser(Parser):
                 price,
                 None,
                 0,
-                {address}
+                [address.trim()]
             ))
 
         return result
@@ -59,25 +56,28 @@ class SdvorParser(Parser):
                 address = json.loads(address)
                 addresses.append(city['name'] + ' ' + address['address'])
 
-        html = requests.get('https://www.sdvor.com/moscow/search/?only_in_stock=true&str=' + search_word).text
-        soup = BeautifulSoup(html)
-
         result = []
-        for block in soup.find_all("div", {"class": "w1l5ijvb p4t3w1l".split()}):
-            name = block.find("div", {"class": "i1b5ubz7"}).find("a").text
-            link = block.find("span", {"class": "p1hbhc78"})
-            price = link.text
-            url = link.get('href')
 
-            result.append(RequestModel(
-                search_word,
-                url,
-                name,
-                price,
-                None,
-                0,
-                addresses
-            ))
+        for city in cities:
+            html = requests.get(
+                'https://www.sdvor.com/' + city['uri_name'] + '/search/?only_in_stock=true&str=' + search_word).text
+            soup = BeautifulSoup(html, "html.parser")
+            for block in soup.find_all("div", {"class": "w1l5ijvb p4t3w1l".split()}):
+                name = block.find("div", {"class": "i1b5ubz7"}).find("a").text
+                link = block.find("span", {"class": "p1hbhc78"})
+                price = link.text.replace(' ₽', '')
+                url = link.get('href')
+
+                result.append(RequestModel(
+                    search_word,
+                    url,
+                    name,
+                    price,
+                    None,
+                    0,
+                    addresses
+                ))
+
         return result
 
 
@@ -86,7 +86,15 @@ class Sb1Parser(Parser):
     @staticmethod
     def search(search_word):
         html = requests.get('https://s-b-1.ru/catalog/?q=' + search_word).text
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, "html.parser")
+
+        addresses = []
+        for city in soup.find('div', {'class': 'region_wrapper'}).find('div', {'ul': 'wrap'}).find_all('li', {
+            'class': 'more_item has-sub'}):
+            city_name = city.find('a', {'class': 'item none_click'.split()})
+            for addresses_json in city.find('div', {'class': 'sub'}).find_all('li'):
+                address_name = addresses_json.find('a', {'class': 'item'}).text
+                addresses.append(city_name + " " + address_name)
 
         result = []
         for block in soup.find_all("div", {"class": "item_block"}):
@@ -106,7 +114,7 @@ class Sb1Parser(Parser):
                 price,
                 None,
                 0,
-                {}
+                addresses
             ))
 
         return result
