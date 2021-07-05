@@ -1,9 +1,7 @@
-import json
 
 
 class RequestModel:
-    
-    # url - ссылка на страницу с товаром
+
     # key_word - ключевое слово, по которому был найден данный товар
     # result - объект класса ResultModel, хранящий информацию о полученном товаре
     def __init__(self, key_word, result):
@@ -13,6 +11,7 @@ class RequestModel:
 
 class ResultModel:
 
+    # url - ссылка на страницу с товаром
     # full_name - полное название товара
     # price - цена товара в рублях
     # per - количество товара за его цену (шт, кг...)

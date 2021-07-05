@@ -129,7 +129,9 @@ def favourites_command(message):
 @_bot.message_handler(commands="pricehistory")
 def price_history_command(message):
     # TODO - добавить выбор категории (ключевого слова) по кнопкам и вывод графика
-    # Requests.Requests.get_price_statistics_history()
+    # days_count = message.text[len('/pricehistory ']:]
+    # key_word = (magic button)
+    # Requests.Requests.get_price_statistics_history(key_word, days_count)
     pass
 
 
@@ -167,6 +169,10 @@ def admin_users_command(message):
 # команда, позволяющая админу увидеть график количества зарегистрированных пользователей по дням
 @_bot.message_handler(commands="usershistory")
 def admin_users_history_command(message):
+    uid = message.from_user.id
+    if not Users.Users.is_admin(uid):
+        return
+
     # TODO - сделать вывод графика зарегистрированных пользователей по дням
     # Users.Users.get_users_statistics_history()
     pass
@@ -175,6 +181,10 @@ def admin_users_history_command(message):
 # команда, позволяющая админу увидеть график количества запросов пользователей по дням
 @_bot.message_handler(commands="requestshistory")
 def admin_requests_history_command(message):
+    uid = message.from_user.id
+    if not Users.Users.is_admin(uid):
+        return
+
     # TODO - сделать вывод графика запросов от пользователей по дням
     # Logs.Logs.get_requests_statistics_history()
     pass
@@ -301,16 +311,18 @@ def test_command(message):
     pass
 
 
-@_bot.callback_query_handler(func=lambda c:True)
+@_bot.callback_query_handler(func=lambda c: True)
 def inlin(c):
-    uid = c.from_user.id
-    json = c.message.json['text']
-    full_name = json.split('\n')[0][3:]
     if c.data == 'add_to_favourites':
+        uid = c.from_user.id
+        json = c.message.json['text']
+        full_name = json.split('\n')[0][3:]
         Favourites.Favourites.add_request_to_favourites(uid, full_name)
     if c.data == 'remove_from_favourites':
+        uid = c.from_user.id
+        json = c.message.json['text']
+        full_name = json.split('\n')[0][3:]
         Favourites.Favourites.remove_request_from_favourites(uid, full_name)
-
 
 
 def prepare_msg(line, counter):

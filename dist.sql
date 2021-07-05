@@ -134,7 +134,7 @@ create trigger renew_favourites_on_request_insert
             on l.request_id = r.id
          where l.id in (select f.log_id from favourites f))
 begin
-    insert into Renewed_Favourites (user_id, full_name, favourite_id)
+    insert into Renewed_Favourites (user_id, full_name)
     values (select l.user_id
             from logs l
             where l.request_id in (

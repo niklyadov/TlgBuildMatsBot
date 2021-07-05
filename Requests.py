@@ -39,11 +39,11 @@ class Requests:
 
     # возвращает статистику цен по дням по ключевому слову
     @staticmethod
-    def get_price_statistics_history(key_word):
+    def get_price_statistics_history(key_word, days_count):
         with sqlite3.connect("main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
-                "select date, result from requests where key_word_id = (select id from key_words where word = ?)", (key_word, )).fetchall()
+                "select date, result from requests where key_word_id = (select id from key_words where word = ?) and julianday() - julianday(date) < ?", (key_word, days_count)).fetchall()
             stat = []
             for line in db_result:
                 price = JSON_Converter.deserialize(line[1]).price

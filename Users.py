@@ -79,11 +79,11 @@ class Users:
 
     # возвращает статистику по количеству зарегистрированных пользователей по дням
     @staticmethod
-    def get_users_statistics_history():
+    def get_users_statistics_history(days_count):
         with sqlite3.connect("main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
-                "select round(julianday(start_date)), count() from users group by round(julianday(start_date))").fetchall()
+                "select round(julianday(start_date)), count() from users where julianday() - julianday(date) < ? group by round(julianday(start_date))", (days_count, )).fetchall()
             stat = []
             for line in db_result:
                 stat.append(StatisticModel.StatisticModel(line[0], line[1]))
