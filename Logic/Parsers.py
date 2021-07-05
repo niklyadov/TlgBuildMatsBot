@@ -63,9 +63,9 @@ class SdvorParser(Parser):
                 'https://www.sdvor.com/' + city['uri_name'] + '/search/?only_in_stock=true&str=' + search_word).text
             soup = BeautifulSoup(html, "html.parser")
             for block in soup.find_all("div", {"class": "w1l5ijvb p4t3w1l".split()}):
-                name = block.find("div", {"class": "i1b5ubz7"}).find("a").text
-                link = block.find("span", {"class": "p1hbhc78"})
-                price = link.text.replace(' ₽', '')
+                link = block.find("div", {"class": "i1b5ubz7"}).find("a")
+                name = link.text
+                price = block.find("span", {"class": "p1hbhc78"}).text
                 url = link.get('href')
 
                 result.append(RequestModel(
