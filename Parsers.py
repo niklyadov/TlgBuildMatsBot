@@ -1,8 +1,12 @@
+import json
+import venv
+
 import requests
 from bs4 import BeautifulSoup
 
-
 # TODO - Никита, если не сложно можешь подогнать методы search так, чтобы они возвращали объекты класса ResultModel :)
+from RequestModel import RequestModel
+
 
 class Parser:
 
@@ -22,21 +26,44 @@ class RadugastroyParser(Parser):
         for category in soup.find_all("li", {"class": "shopListingPage-cat"}):
             categories.append(category.find("a").text)
 
+        address = soup.find('div', {'class': 'siteFooter-address'}).text
+
+        result = []
         for block in soup.find_all("li", {"class": "shopBlock-item"}):
-            name = block.find("div", {"class": "name"}).find("a").text
+            link = block.find("div", {"class": "name"}).find("a")
+            name = link.text
+            url = link.get('href')
             price = block.find("b", {"class": "js_shop_price"}).text
 
-            in_stock = "+"
             if block.find("div", {"class": "stock js_stock inStock"}) is None:
-                in_stock = "-"
+                return
 
-            print(name + " (" + price + ")  " + in_stock)
+            result.append(RequestModel(
+                search_word,
+                url,
+                name,
+                price,
+                None,
+                0,
+                {address}
+            ))
+
+        return result
 
 
 class SdvorParser(Parser):
 
     @staticmethod
     def search(search_word):
+        cities = requests.get('https://www.sdvor.com/api/omni_order/cities/').text
+        cities = json.loads(cities)
+
+        addresses = []
+        for city in cities:
+            for address in requests.get('https://www.sdvor.com/api/omni_order/shops/?city_id=' + city.id).text:
+                address = json.loads(address)
+                addresses.append(city.name + ' ' + address.address)
+
         html = requests.get('https://www.sdvor.com/moscow/search/?only_in_stock=true&str=' + search_word).text
         soup = BeautifulSoup(html)
 
@@ -47,11 +74,22 @@ class SdvorParser(Parser):
                 break
             categories.append(category.text)
 
+        result = []
         for block in soup.find_all("div", {"class": "w1l5ijvb p4t3w1l".split()}):
             name = block.find("div", {"class": "i1b5ubz7"}).find("a").text
-            price = block.find("span", {"class": "p1hbhc78"}).text
-            in_stock = "+"
-            print(name + " (" + price + ")  " + in_stock)
+            link = block.find("span", {"class": "p1hbhc78"})
+            price = link.text
+            url = link.get('href')
+
+            result.append(RequestModel(
+                search_word,
+                url,
+                name,
+                price,
+                None,
+                0,
+                addresses
+            ))
 
 
 class Sb1Parser(Parser):
