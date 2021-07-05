@@ -9,6 +9,8 @@ import HistoryAppender
 import schedule
 import Logs
 import RenewedFavourites
+import threading
+import time
 
 import Users
 
@@ -373,6 +375,13 @@ def cron_requests_update():
     RenewedFavourites.RenewedFavourites.clear_renewed_favourites()
 
 
-schedule.every().day.at("00:00").do(cron_requests_update)
+def timer():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+schedule.every().day.at("21:55").do(cron_requests_update)
+threading.Thread(target=timer).start()
 
 _bot.polling()

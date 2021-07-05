@@ -8,7 +8,9 @@ class HistoryAppender:
         self.parsers = parsers
 
     def append(self, parser, key_word):
-        Requests.Requests.add_request(parser.search(key_word))
+        result = parser.search(key_word)
+        for request in result:
+            Requests.Requests.add_request(request)
 
     def append_history(self):
         threads = []
