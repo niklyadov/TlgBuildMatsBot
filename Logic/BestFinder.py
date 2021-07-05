@@ -1,5 +1,7 @@
 from Models import RequestModel
 from DB.DbContexsts import Logs
+from Utils.JSON_Converter import JSON_Converter as json
+from DB.DbContexsts.Requests import Requests
 
 
 class BestFinder:
@@ -11,19 +13,17 @@ class BestFinder:
 
     # возвращает список RequestModel, отсортированный по ordering и ограниченный top_count
     def find_best(self, search_word):
-       #db_items = JSON_Converter.JSON_Converter.deserialize(Requests.Requests.get_last_day_requests_by_search_word(search_word))
-        db_items = [
-            RequestModel.RequestModel("кирпич", "http://www.stackoverflow.com", 'кирпич обыкновенный', 12.4, 'шт', 5, ['ЧЛБ', 'ЕКБ']),
-            RequestModel.RequestModel("камень", "http://www.stackoverflow.com", 'камень необыкновенный 10000', 1023.4, 'кг', 5, ['ЧЛБ', 'ЕКБ', 'МСК'])]
+        db_items = Requests.get_last_day_requests_by_search_word(search_word)
 
+        db_items = [(i[0], json.deserialize(i[1])) for i in db_items]
         if self.ordering == 1:
-            sorted(db_items, key=lambda key: key.price)
+            sorted(db_items, key=lambda key: key[1]['price'])
         elif self.ordering == 2:
-            sorted(db_items, key=lambda key: key.rating)
+            sorted(db_items, key=lambda key: key[1]['rating'])
         elif self.ordering == 3:
-            sorted(db_items, key=lambda key: key.full_name)
+            sorted(db_items, key=lambda key: key[1]['full_name'])
         else:
-            sorted(db_items, key=lambda key: key.full_name, reverse=True)
+            sorted(db_items, key=lambda key: key[1]['full_name'], reverse=True)
 
         result = db_items[:self.top_count]
         if len(result) >= self.top_count:
@@ -34,6 +34,6 @@ class BestFinder:
             log_message = 'partially_done'
 
         # TODO - логирование по id
-        Logs.Logs.log(search_word, 1, log_message, self.user_id)
+        Logs.Logs.log(search_word, json.serialize([i[1] for i in db_items]), log_message, self.user_id)
 
         return result

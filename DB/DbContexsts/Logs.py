@@ -7,11 +7,11 @@ class Logs:
 
     # добавляет лог в базу
     @staticmethod
-    def log(search_word, request, message, user_id):
+    def log(search_word, result, message, user_id):
         with sqlite3.connect("DB/main.db") as dbc:
             dbc.execute(
-                "insert into logs(search_word, request_id, message_id, user_id) values (?, ?,(select id from messages where message = ?), ?);",
-                (search_word, request, message, user_id))
+                "insert into logs(search_word, result, message_id, user_id) values (?, ?,(select id from messages where message = ?), ?);",
+                (search_word, result, message, user_id))
             dbc.commit()
 
     # возвращает статистику количества запросов пользователей по дням
@@ -33,7 +33,7 @@ class Logs:
         with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             json_result = cursor.execute(
-                "select date, (select result from requests where id = request_id) from logs where user_id = ?",
+                "select date, result from logs where user_id = ?",
                                   (user_id,)).fetchall()
             result = {}
             for item in json_result:

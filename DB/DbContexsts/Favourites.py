@@ -30,7 +30,7 @@ class Favourites:
             dbc.row_factory = lambda cursor, row: row[0]
             cursor = dbc.cursor()
             json_result = cursor.execute(
-                "select date, (select result from requests where id = request_id) from logs where id = (select log_id from favourites where user_id = ?)",
+                "select date, result from logs where id = (select log_id from favourites where user_id = ?)",
                 (user_id,)).fetchall()
             result = {}
             for item in json_result:

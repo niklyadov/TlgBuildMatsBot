@@ -115,10 +115,12 @@ create trigger set_datetime_now_on_request_insert
 begin
     delete from requests where id = new.id;
     insert
-        into requests (id, date, result)
+        into requests (id, full_name, key_word_id, date, result)
         values
         (
             new.id,
+            new.full_name,
+            new.key_word_id,
             strftime('%Y-%m-%d %H:%M:%S', datetime('now')),
             new.result
         );
@@ -127,20 +129,13 @@ end;
 create trigger renew_favourites_on_request_insert
     after insert on requests
     when new.full_name in
-         (select
-            r.full_name
-         from logs l
-         join requests r
-            on l.request_id = r.id
-         where l.id in (select f.log_id from favourites f))
+         (select result from logs
+         where id in (select log_id from favourites))
 begin
     insert into Renewed_Favourites (user_id, full_name)
-    values ((select l.user_id
-            from logs l
-            where l.request_id in (
-                select r.id
-                from requests r
-                where r.full_name = new.full_name)),
+    values ((select user_id
+            from logs
+            where result like '%'||new.full_name||'%'),
             new.full_name);
 end;
 
@@ -151,6 +146,9 @@ create table Key_Words (
     word text not null
 );
 -- create some keywords --
+insert into Key_Words (word) values ('камень');
+insert into Key_Words (word) values ('кирпич');
+insert into Key_Words (word) values ('бетон');
 
 -- Favourites ----------------------------------------------------------------------------------------------------------
 
@@ -177,10 +175,9 @@ create table Logs (
     date text,
     search_word integer not null,
     user_id integer not null,
-    request_id integer not null,
+    result text not null,
     message_id integer not null,
     foreign key (user_id) references users(telegram_id),
-    foreign key (request_id) references Requests(id),
     foreign key (message_id) references messages(id)
 );
 

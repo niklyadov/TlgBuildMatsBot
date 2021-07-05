@@ -17,5 +17,5 @@ class RenewedFavourites:
         with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
-                "select favourite_id from renewed_favourites").fetchall()
+                "select user_id, full_name from renewed_favourites").fetchall()
             return db_result

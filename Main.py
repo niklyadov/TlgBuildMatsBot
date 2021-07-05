@@ -24,7 +24,7 @@ def start_command(message):
 
 # команда, позволяющая искать товары
 # TODO - сделать нормальный вывод
-@_bot.message_handler(commands="search")
+@_bot.message_handler(commands=["search"])
 def search_word_command(message):
     if len(message.text) < 9:
         _bot.reply_to(message, "Для поиска необходимых материалов,\nвведите команду '/search [запрос]")
@@ -39,15 +39,19 @@ def search_word_command(message):
         _bot.reply_to(message, "Ничего не найдено")
         return
 
-    for item in top:
-        msg += "{}:\nЦена: {} за {}\nДоступно в {}\nРейтинг: {}\n{}\n\n".format(item.full_name, item.price, item.per, item.available_at, item.rating, item.url)
+    counter = 1
+    for id, value in top:
+        msg += prepare_msg(value, counter)
+        counter += 1
+        #msg += "{}:\nЦена: {} за {}\nДоступно в {}\nРейтинг: {}\n{}\n\n".format(
+         #   value['full_name'], value['price'], value['per'], value['available_at'], value['rating'], value['url'])
 
     _bot.reply_to(message, msg)
 
 
 # команда, позволяющая посмотреть историю поисков
 # (для обычного пользователя - только свою, для админа - любого пользователя)
-@_bot.message_handler(commands="history")
+@_bot.message_handler(commands=["history"])
 def history_command(message):
     uid = message.from_user.id
     msg = ""
@@ -83,7 +87,7 @@ def history_command(message):
 
 # команда, позволяющая посмотреть список избранного
 # (для обычного пользователя - только свой, для админа - любого пользователя)
-@_bot.message_handler(commands="favourites")
+@_bot.message_handler(commands=["favourites"])
 def favourites_command(message):
     uid = message.from_user.id
     msg = ""
@@ -121,7 +125,7 @@ days_count = 0
 
 
 # команда, позволяющая посмотреть как изменялась цена на определенную категорию по дням
-@_bot.message_handler(commands="pricehistory")
+@_bot.message_handler(commands=["pricehistory"])
 def price_history_command(message):
     days_count = message.text[len('/pricehistory '):]
     if not days_count.isnumeric() or len(message.text) <= len('/pricehistory '):
@@ -151,7 +155,7 @@ def my_role_command(message):
 
 
 # команда, позволяющая админу увидеть весь список пользоваетелей
-@_bot.message_handler(commands="users")
+@_bot.message_handler(commands=["users"])
 def admin_users_command(message):
     uid = message.from_user.id
 
@@ -168,7 +172,7 @@ def admin_users_command(message):
 
 
 # команда, позволяющая админу увидеть график количества зарегистрированных пользователей по дням
-@_bot.message_handler(commands="usershistory")
+@_bot.message_handler(commands=["usershistory"])
 def admin_users_history_command(message):
     uid = message.from_user.id
     if not Users.Users.is_admin(uid):
@@ -181,7 +185,7 @@ def admin_users_history_command(message):
 
 
 # команда, позволяющая админу увидеть график количества запросов пользователей по дням
-@_bot.message_handler(commands="requestshistory")
+@_bot.message_handler(commands=["requestshistory"])
 def admin_requests_history_command(message):
     uid = message.from_user.id
     if not Users.Users.is_admin(uid):
@@ -340,18 +344,18 @@ def show_history(c, category, data):
 def prepare_msg(line, counter):
     msg = ""
     msg += '#{} '.format(counter)
-    msg += ' {}\n'.format(line.full_name)
-    msg += 'Цена: {}'.format(line.price)
-    if line.per is not None:
-        msg += ' за {}'.format(line.per)
+    msg += ' {}\n'.format(line['full_name'])
+    msg += 'Цена: {}'.format(line['price'])
+    if line['per'] is not None:
+        msg += ' за {}'.format(line['per'])
     msg += '\n'
-    if line.rating is None:
-        line.rating = 'отсутствует'
-    msg += 'Рейтинг: {}\n'.format(line.rating)
+    if line['rating'] is None:
+        line['rating'] = 'отсутствует'
+    msg += 'Рейтинг: {}\n'.format(line['rating'])
     msg += 'Доступно в:\n'
-    for available_at in line.available_at:
+    for available_at in line['available_at']:
         msg += ' -- {}\n'.format(available_at)
-    msg += line.url
+    msg += line['url']
     msg += '\n\n'
     return msg
 
@@ -373,7 +377,8 @@ def timer():
         time.sleep(1)
 
 
-schedule.every().day.at("21:55").do(cron_requests_update)
-threading.Thread(target=timer).start()
+#schedule.every().day.at("22:37").do(cron_requests_update)
+#threading.Thread(target=timer).start()
+#cron_requests_update()
 
 _bot.polling()
