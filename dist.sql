@@ -124,6 +124,26 @@ begin
         );
 end;
 
+create trigger renew_favourites_on_request_insert
+    after insert on requests
+    when new.full_name in
+         (select
+            r.full_name
+         from logs l
+         join requests r
+            on l.request_id = r.id
+         where l.id in (select f.log_id from favourites f))
+begin
+    insert into Renewed_Favourites (user_id, full_name, favourite_id)
+    values (select l.user_id
+            from logs l
+            where l.request_id in (
+                select r.id
+                from requests r
+                where r.full_name = new.full_name))),
+            new.full_name)
+end;
+
 -- Key_Words -----------------------------------------------------------------------------------------------------------
 
 create table Key_Words (
@@ -185,3 +205,11 @@ begin
         set date = strftime('%Y-%m-%d %H:%M:%S', datetime('now')) where id = new.id;
 end;
 
+-- Renewed_Favourites --------------------------------------------------------------------------------------------------
+
+create table Renewed_Favourites (
+    id integer primary key,
+    user_id integer not null,
+    full_name text not null,
+    foreign key (user_id) references Users(telegram_id),
+)

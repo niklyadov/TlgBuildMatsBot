@@ -1,9 +1,14 @@
 import telebot
 import BestFinder
 import Favourites
+import Key_Words
+import Parsers
 import Settings
 import Requests
+import HistoryAppender
+import schedule
 import Logs
+import RenewedFavourites
 
 import Users
 
@@ -49,8 +54,6 @@ def search_word_command(message):
 
 # команда, позволяющая посмотреть историю поисков
 # (для обычного пользователя - только свою, для админа - любого пользователя)
-# TODO - сделать нормальный вывод
-# TODO - возможно добавить кнопку "добавить в избранное"
 @_bot.message_handler(commands="history")
 def history_command(message):
     uid = message.from_user.id
@@ -87,8 +90,6 @@ def history_command(message):
 
 # команда, позволяющая посмотреть список избранного
 # (для обычного пользователя - только свой, для админа - любого пользователя)
-# TODO - сделать нормальный вывод
-# TODO - возможно добавить кнопку "убрать из избранного"
 @_bot.message_handler(commands="favourites")
 def favourites_command(message):
     uid = message.from_user.id
@@ -326,5 +327,18 @@ def prepare_msg(line, counter):
     msg += '\n\n'
     return msg
 
+
+def cron_requests_update():
+    history_appender = HistoryAppender.HistoryAppender(Parsers.parsers)
+    history_appender.append_history()
+
+    db_result = RenewedFavourites.RenewedFavourites.get_renewed_favourites()
+    for user_id, full_name in db_result:
+        _bot.send_message(user_id, "Изменилась цена на товар из вашего избранного под названием\n{}".format(full_name))
+
+    RenewedFavourites.RenewedFavourites.clear_renewed_favourites()
+
+
+schedule.every().day.at("00:00").do(cron_requests_update)
 
 _bot.polling()

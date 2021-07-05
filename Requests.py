@@ -8,12 +8,12 @@ class Requests:
 
     # добавление реквеста в базу
     @staticmethod
-    def add_request(user_id, request):
+    def add_request(request):
         with sqlite3.connect("main.db") as dbc:
             json_result = JSON_Converter.serialize(request.result)
             dbc.execute(
-                "insert into requests (user_id, full_name, key_word_id, result) values (?, ?, (select id from key_words where word = ?), ?)",
-                        (user_id, request.result.full_name, request.key_word, json_result))
+                "insert into requests (full_name, key_word_id, result) values (?, (select id from key_words where word = ?), ?)",
+                        (request.result.full_name, request.key_word, json_result))
             dbc.commit()
 
     # возвращает список реквестов за последний день, добавленных по ключевому слову
