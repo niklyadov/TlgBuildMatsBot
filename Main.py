@@ -379,6 +379,6 @@ def timer():
 
 #schedule.every().day.at("22:37").do(cron_requests_update)
 #threading.Thread(target=timer).start()
-#cron_requests_update()
+cron_requests_update()
 
 _bot.polling()

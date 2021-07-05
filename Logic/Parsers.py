@@ -37,7 +37,7 @@ class RadugastroyParser(Parser):
                 price,
                 None,
                 0,
-                [address.trim()]
+                [address.strip()]
             ))
 
         return result
@@ -52,8 +52,8 @@ class SdvorParser(Parser):
 
         addresses = []
         for city in cities:
-            for address in requests.get('https://www.sdvor.com/api/omni_order/shops/?city_id=' + city['id']).text:
-                address = json.loads(address)
+            json_addresses = json.loads(requests.get('https://www.sdvor.com/api/omni_order/shops/?city_id={}'.format(city['id'])).text)
+            for address in json_addresses:
                 addresses.append(city['name'] + ' ' + address['address'])
 
         result = []
