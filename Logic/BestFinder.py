@@ -32,10 +32,21 @@ class BestFinder:
             log_message = 'successful'
         elif len(result) == 0:
             log_message = 'error'
+            Logs.Logs.log(
+                search_word,
+                json.serialize([]),
+                0,
+                log_message,
+                self.user_id)
         else:
             log_message = 'partially_done'
 
         for id, item in result:
-            Logs.Logs.log(search_word, json.serialize(item), log_message, self.user_id)
+            Logs.Logs.log(
+                search_word,
+                json.serialize(item),
+                flt.try_convert_to_float(item['price'].strip().replace(",", ".").replace(" ", "")),
+                log_message,
+                self.user_id)
 
         return result

@@ -7,11 +7,11 @@ class Logs:
 
     # добавляет лог в базу
     @staticmethod
-    def log(search_word, result, message, user_id):
+    def log(search_word, result, price, message, user_id):
         with sqlite3.connect("DB/main.db") as dbc:
             dbc.execute(
-                "insert into logs(search_word, result, message_id, user_id) values (?, ?,(select id from messages where message = ?), ?);",
-                (search_word, result, message, user_id))
+                "insert into logs(search_word, result, price, message_id, user_id) values (?, ?, ?, (select id from messages where message = ?), ?);",
+                (search_word, result, price, message, user_id))
             dbc.commit()
 
     # возвращает статистику количества запросов пользователей по дням

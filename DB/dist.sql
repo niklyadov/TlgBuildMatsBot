@@ -24,13 +24,6 @@ begin
         where new.role_id not in (select id from roles);
 end;
 
-create trigger check_on_user_update
-    before update on users
-begin
-    select raise(abort, 'Role does not exist.')
-        where new.role_id not in (select id from roles);
-end;
-
 create trigger create_default_settings_on_user_insert
     after insert on users
 begin
@@ -83,10 +76,6 @@ end;
 create trigger check_on_settings_update
     before update on settings
 begin
-    -- может быть очень ресурсозатратно ----------------------------
-    select raise(abort, 'User does not exist.')                   --
-        where new.user_id not in (select telegram_id from users); --
-    ----------------------------------------------------------------
     select raise(abort, 'Top count must be greater than 0 and lesser than 10.')
         where new.top_count <= 0 or new.top_count > 9;
     select raise(abort, 'Ordering does not exist.')
@@ -133,10 +122,14 @@ create trigger renew_favourites_on_request_insert
     when ((select count() from (select result from logs
          where id in (select log_id from favourites) and lower(Logs.result) like '%'||lower(new.full_name)||'%')) > 0)
 begin
-    insert into Renewed_Favourites (user_id, full_name)
+    insert into Renewed_Favourites (user_id, old_price, new_price, full_name)
     values ((select user_id
-            from logs
-            where lower(result) like '%'||lower(new.full_name)||'%'),
+                from logs
+                where lower(result) like '%'||lower(new.full_name)||'%'),
+            (select price
+                from logs
+                where lower(result) like '%'||lower(new.full_name)||'%'),
+            new.price,
             new.full_name);
 end;
 
@@ -156,7 +149,7 @@ insert into Key_Words (word) values ('бетон');
 create table Favourites (
     id integer primary key,
     log_id integer not null,
-    foreign key (log_id) references requests(id)
+    foreign key (log_id) references logs(id)
 );
 
 create trigger check_logs_on_favourite_insert
@@ -183,6 +176,7 @@ create table Logs (
     date text,
     search_word integer not null,
     user_id integer not null,
+    price real not null,
     result text not null,
     message_id integer not null,
     foreign key (user_id) references users(telegram_id),
@@ -215,6 +209,8 @@ end;
 create table Renewed_Favourites (
     id integer primary key,
     user_id integer not null,
+    old_price real not null,
+    new_price real not null,
     full_name text not null,
     foreign key (user_id) references Users(telegram_id)
 )

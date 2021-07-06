@@ -445,8 +445,17 @@ def cron_requests_update():
     print('#: Конец обновления данных')
 
     db_result = RenewedFavourites.RenewedFavourites.get_renewed_favourites()
-    for user_id, full_name in db_result:
-        _bot.send_message(user_id, "Товар из вашего избранного был обновлен:\n{}".format(full_name))
+    for user_id, old_price, new_price, full_name in db_result:
+        if old_price != new_price:
+            if old_price > new_price:
+                symbol = "⤵️"
+            else:
+                symbol = "⤴️"
+
+            _bot.send_message(user_id, "Изменение цены на товар из вашего избранного:"
+                                       "\n{}"
+                                       "\nСтарая цена: {}"
+                                       "\nНовая цена: {} - {}".format(full_name, old_price, new_price, symbol))
 
     RenewedFavourites.RenewedFavourites.clear_renewed_favourites()
 
@@ -457,7 +466,7 @@ def timer():
         time.sleep(60)
 
 
-schedule.every().day.at("02:30").do(cron_requests_update)
+schedule.every().day.at("21:00").do(cron_requests_update)
 threading.Thread(target=timer).start()
 #cron_requests_update()
 
