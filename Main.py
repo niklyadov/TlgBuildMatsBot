@@ -23,7 +23,6 @@ def start_command(message):
 
 
 # команда, позволяющая искать товары
-# TODO - сделать нормальный вывод
 @_bot.message_handler(commands=["search"])
 def search_word_command(message):
     if len(message.text) < 9:
@@ -39,12 +38,13 @@ def search_word_command(message):
         _bot.reply_to(message, "Ничего не найдено \U0001F614")
         return
 
+    _bot.reply_to(message, "По вашему запросы были найдены следующие товары:")
     counter = 1
     for id, value in top:
         msg = prepare_msg(value, counter)
         counter += 1
 
-        _bot.reply_to(message, msg)
+        _bot.send_message(message.from_user.id, msg)
 
 
 _ordering = {1: 'цена', 2: 'рейтинг', 3: 'а-я', 4: 'я-а'}
@@ -88,7 +88,7 @@ def settings_help():
            "\n/settings [кол-во товаров (1-9)] [сортировать по (цена, рейтинг, а-я, я-а)]"
 
 
-_history = {}
+history = {}
 
 
 # команда, позволяющая посмотреть историю поисков
@@ -105,9 +105,9 @@ def history_command(message):
         id = uid
         msg += "Ваша история:\n\n"
 
+    global history
     history = Logs.Logs.get_user_requests_history(id)
-    for key, value in history.items():
-        _history[key] = value
+
     if len(history) == 0:
         _bot.reply_to(message, "История не найдена")
         return
@@ -135,14 +135,14 @@ def history_command(message):
 def show_user_history(message, history):
     for date, requests in history.items():
 
-        _bot.reply_to(message, 'Запрос от ' + date + ':')
         counter = 1
         for request in requests:
-            msg = prepare_msg(request, counter)
+            msg = 'Запрос от 📅 ' + date + ':\n'
+            msg += prepare_msg(request, counter)
             counter += 1
 
             markup = telebot.types.InlineKeyboardMarkup()
-            btn = telebot.types.InlineKeyboardButton(text="Добавить в избранное", reply_markup=markup,
+            btn = telebot.types.InlineKeyboardButton(text="⭐️Добавить в избранное ⭐️", reply_markup=markup,
                                                              callback_data="add_to_favourites")
             markup.add(btn)
             _bot.send_message(message.chat.id, msg, reply_markup = markup)
@@ -155,8 +155,8 @@ def favourites_command(message):
     uid = message.from_user.id
     msg = ""
 
-    if Users.Users.is_admin(uid) and len(message.text) > 8:
-        id = message.text[9:]
+    if Users.Users.is_admin(uid) and len(message.text) > len('/favourites '):
+        id = message.text[len('/favourites '):]
         msg += "Избранное пользователя " + id + "\n\n"
     else:
         id = uid
@@ -170,15 +170,15 @@ def favourites_command(message):
     _bot.reply_to(message, msg)
     for date, request in favourites.items():
 
-        _bot.reply_to(message, 'Запрос от ' + date + ':')
         counter = 1
 
         for line in request:
-            msg = prepare_msg(line, counter)
+            msg = 'Запрос от 📅 ' + date + ':\n'
+            msg += prepare_msg(line, counter)
             counter += 1
 
             markup = telebot.types.InlineKeyboardMarkup()
-            btn = telebot.types.InlineKeyboardButton(text="Убрать из избранного", reply_markup=markup,
+            btn = telebot.types.InlineKeyboardButton(text="❌ Убрать из избранного ❌", reply_markup=markup,
                                                      callback_data="remove_from_favourites")
             markup.add(btn)
             _bot.send_message(message.chat.id, msg, reply_markup=markup)
@@ -190,10 +190,14 @@ days_count = 0
 # команда, позволяющая посмотреть как изменялась цена на определенную категорию по дням
 @_bot.message_handler(commands=["pricehistory"])
 def price_history_command(message):
+    global days_count
     days_count = message.text[len('/pricehistory '):]
     if not days_count.isnumeric() or len(message.text) <= len('/pricehistory '):
         _bot.reply_to(message, 'Для получения статистики по ценам используйте команду'
                                '\n/pricehistory *промежуток времени до сегоднящнего дня в днях*')
+        return
+    if int(days_count) == 0:
+        _bot.reply_to(message, 'Количество дней должно быть больше нуля')
         return
 
     key_words = Key_Words.key_words
@@ -231,11 +235,9 @@ def admin_users_command(message):
 
     users = Users.Users.get_all_users()
 
-    msg = "Список пользователей:\n\n"
+    _bot.reply_to(message, "Список пользователей:\n\n")
     for user in users:
-        msg += "id: {}\nРоль: {}\nДата начала: {}\n\n".format(user[0], user[1], user[2])
-
-    _bot.reply_to(message, msg)
+        _bot.send_message(message.from_user.id, "id: {}\nРоль: {}\nДата начала: {}\n\n".format(user[0], user[1], user[2]))
 
 
 # команда, позволяющая админу увидеть график количества зарегистрированных пользователей по дням
@@ -245,7 +247,7 @@ def admin_users_history_command(message):
     if not Users.Users.is_admin(uid):
         return
 
-    # TODO - сделать вывод графика зарегистрированных пользователей по дням
+    # TODO - Дарья: сделать вывод графика зарегистрированных пользователей по дням
     # days_count = message.text[len('/usershistory '):]
     # Users.Users.get_users_statistics_history(days_count)
     pass
@@ -258,14 +260,13 @@ def admin_requests_history_command(message):
     if not Users.Users.is_admin(uid):
         return
 
-    # TODO - сделать вывод графика запросов от пользователей по дням
+    # TODO - Дарья: сделать вывод графика запросов от пользователей по дням
     # days_count = message.text[len('/requestshistory '):]
     # Logs.Logs.get_requests_statistics_history(days_count)
     pass
 
 
 # команда, позволяющая супер-юзеру установить другому пользователю роль админа
-# TODO !требуется тестирование!
 @_bot.message_handler(commands=['setadmin'])
 def super_user_set_admin_command(message):
     uid = message.from_user.id
@@ -338,7 +339,6 @@ def super_user_unset_admin_command(message):
 
 
 # команда, позволяющая супер-юзеру передать права супер-юзера другому пользователю
-# TODO !требуется тестирование!
 @_bot.message_handler(commands=['superusertransfer'])
 def super_user_transfer_command(message):
     uid = message.from_user.id
@@ -384,33 +384,43 @@ def super_user_transfer_command(message):
 def favourites_buttons_handler(c):
     uid = c.from_user.id
     json = c.message.json['text']
-    full_name = json.split('\n')[0][3:]
+    full_name = json.split('\n')[1][5:]
     if c.data == 'add_to_favourites':
-        Favourites.Favourites.add_request_to_favourites(uid, full_name)
+        try:
+            Favourites.Favourites.add_request_to_favourites(uid, full_name)
+        except Exception as e:
+            _bot.reply_to(c.message, "❌ Вы не можете добавить в избранное, то, что там уже есть")
     if c.data == 'remove_from_favourites':
         Favourites.Favourites.remove_request_from_favourites(uid, full_name)
+        _bot.delete_message(c.from_user.id, c.message.message_id)
+    _bot.answer_callback_query(c.id)
 
 
 @_bot.callback_query_handler(func=lambda c: 'history' in c.data)
 def history_buttons_handler(c):
-    show_user_history(c.message, _history)
+    global history
+    show_user_history(c.message, history)
+    history = {}
+    _bot.answer_callback_query(c.id)
 
 
 @_bot.callback_query_handler(func=lambda c: 'category' in c.data)
 def categories_buttons_handler(c):
     category = c.data.split('_')[0]
     show_history(c, category, Requests.Requests.get_price_statistics_history(category, days_count))
+    _bot.answer_callback_query(c.id)
 
 
 def show_history(c, category, data):
-    msg = data  # TODO - обработать вывод данных по графику
-    _bot.send_message(c.from_user.id, msg)
-    pass
+    # TODO - Дарья: сделать вывод графика цен по дням по данной категории
+    _bot.send_message(c.from_user.id, 'Статистика по категории - {}:'.format(category))
+    for line in data:
+        _bot.send_message(c.from_user.id, '-- Дата: {}\n-- Средняя цена: {}'.format(line.date, line.count))
 
 
 def prepare_msg(line, counter):
     msg = ""
-    msg += '#{} '.format(counter)
+    msg += '{}\ufe0f\u20e3 '.format(counter)
     msg += ' {}\n'.format(line['full_name'])
     msg += 'Цена: {}'.format(line['price'])
     if line['per'] is not None:
@@ -429,10 +439,10 @@ def prepare_msg(line, counter):
 
 
 def cron_requests_update():
-    print('Начало обновления данных')
+    print('#: Начало обновления данных')
     history_appender = HistoryAppender.HistoryAppender(Parsers.parsers)
     history_appender.append_history()
-    print('Конец обновления данных')
+    print('#: Конец обновления данных')
 
     db_result = RenewedFavourites.RenewedFavourites.get_renewed_favourites()
     for user_id, full_name in db_result:

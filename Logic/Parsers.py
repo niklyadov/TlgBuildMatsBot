@@ -10,7 +10,7 @@ class Parser:
     def search(search_word):
         pass
 
-
+# TODO - Никита: парсинг url и available_at - просто список городов
 class RadugastroyParser(Parser):
 
     @staticmethod

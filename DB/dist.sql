@@ -99,6 +99,7 @@ create table Requests (
     id integer primary key,
     date text,
     full_name text not null,
+    price text not null,
     key_word_id integer not null,
     result text not null,
     foreign key (key_word_id) references key_words(id)
@@ -115,11 +116,12 @@ create trigger set_datetime_now_on_request_insert
 begin
     delete from requests where id = new.id;
     insert
-        into requests (id, full_name, key_word_id, date, result)
+        into requests (id, full_name, price, key_word_id, date, result)
         values
         (
             new.id,
             new.full_name,
+            new.price,
             new.key_word_id,
             strftime('%Y-%m-%d %H:%M:%S', datetime('now')),
             new.result
@@ -156,6 +158,13 @@ create table Favourites (
     log_id integer not null,
     foreign key (log_id) references requests(id)
 );
+
+create trigger check_logs_on_favourite_insert
+    before insert on Favourites
+    when new.log_id in (select log_id from Favourites)
+begin
+    select raise(abort, 'You cannot insert log that already exists into favourites.');
+end;
 
 -- Messages ------------------------------------------------------------------------------------------------------------
 
