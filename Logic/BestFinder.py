@@ -17,13 +17,14 @@ class BestFinder:
 
         db_items = [(i[0], json.deserialize(i[1])) for i in db_items]
         if self.ordering == 1:
-            sorted(db_items, key=lambda key: key[1]['price'])
+            db_items = sorted(db_items, key=lambda key: self._try_convert_to_float(
+                key[1]['price'].strip().replace(",", ".").replace(" ", "")))
         elif self.ordering == 2:
-            sorted(db_items, key=lambda key: key[1]['rating'])
+            db_items = sorted(db_items, key=lambda key: self._try_convert_to_float(key[1]['rating']))
         elif self.ordering == 3:
-            sorted(db_items, key=lambda key: key[1]['full_name'])
+            db_items = sorted(db_items, key=lambda key: key[1]['full_name'])
         else:
-            sorted(db_items, key=lambda key: key[1]['full_name'], reverse=True)
+            db_items = sorted(db_items, key=lambda key: key[1]['full_name'], reverse=True)
 
         result = db_items[:self.top_count]
         if len(result) >= self.top_count:
@@ -33,7 +34,14 @@ class BestFinder:
         else:
             log_message = 'partially_done'
 
-        # TODO - логирование по id
-        Logs.Logs.log(search_word, json.serialize([i[1] for i in db_items]), log_message, self.user_id)
+        for id, item in result:
+            Logs.Logs.log(search_word, json.serialize(item), log_message, self.user_id)
 
         return result
+
+    def _try_convert_to_float(self, str):
+        try:
+            flt = float(str)
+            return flt
+        except Exception as e:
+            return 1_000_000_000

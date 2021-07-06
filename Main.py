@@ -11,7 +11,7 @@ _users = Users.Users()
 
 
 # команда начала работы с ботом
-@_bot.message_handler(commands=['start'])
+@_bot.message_handler(commands=['help', 'start'])
 def start_command(message):
     uid = message.from_user.id
 
@@ -36,17 +36,59 @@ def search_word_command(message):
     top = bf.find_best(message.text[8:])
     msg = ""
     if len(top) == 0:
-        _bot.reply_to(message, "Ничего не найдено")
+        _bot.reply_to(message, "Ничего не найдено \U0001F614")
         return
 
     counter = 1
     for id, value in top:
-        msg += prepare_msg(value, counter)
+        msg = prepare_msg(value, counter)
         counter += 1
-        #msg += "{}:\nЦена: {} за {}\nДоступно в {}\nРейтинг: {}\n{}\n\n".format(
-         #   value['full_name'], value['price'], value['per'], value['available_at'], value['rating'], value['url'])
 
-    _bot.reply_to(message, msg)
+        _bot.reply_to(message, msg)
+
+
+_ordering = {1: 'цена', 2: 'рейтинг', 3: 'а-я', 4: 'я-а'}
+
+
+# команда, позволяющая пользователю просматривать и зименять свои настройки
+@_bot.message_handler(commands=["settings"])
+def settings_command(message):
+    uid = message.from_user.id
+    settings = Settings.Settings.get_settings(uid)
+    if len(message.text) < 11:
+        _bot.reply_to(message, "Ваши настройки:"
+                               "\nКоличество показываемых товаров: {}".format(settings[0]) +
+                               "\nСортировка по: {}".format(_ordering[settings[1]]) +
+                               settings_help())
+        return
+    set = message.text.split()
+    if len(set) != 3:
+        _bot.reply_to(message, settings_help())
+        return
+    top_count = int(set[1])
+    ordering = set[2]
+    if top_count <= 0 or top_count >= 9:
+        _bot.reply_to(message, settings_help())
+        return
+
+    order = None
+    for key, value in _ordering.items():
+        if ordering == value:
+            order = key
+    if order is None:
+        _bot.reply_to(message, settings_help())
+        return
+
+    Settings.Settings.change_settings(uid, top_count, order)
+    _bot.reply_to(message, '✅ Настройки сохранены')
+
+
+def settings_help():
+    return "\nДля того, чтобы изменить настройки введите команду:" \
+           "\n/settings [кол-во товаров (1-9)] [сортировать по (цена, рейтинг, а-я, я-а)]"
+
+
+_history = {}
 
 
 # команда, позволяющая посмотреть историю поисков
@@ -64,18 +106,39 @@ def history_command(message):
         msg += "Ваша история:\n\n"
 
     history = Logs.Logs.get_user_requests_history(id)
+    for key, value in history.items():
+        _history[key] = value
     if len(history) == 0:
         _bot.reply_to(message, "История не найдена")
         return
 
+    history_count = 5
+    small_history = {}
+    if len(history) >= history_count:
+        for key, value in history.items():
+            if len(small_history) < history_count:
+                small_history[key] = value
+    else:
+        small_history = history
     _bot.reply_to(message, msg)
-    for date, request in history.items():
+
+    show_user_history(message, small_history)
+
+    if len(history) >= history_count:
+        markup = telebot.types.InlineKeyboardMarkup()
+        btn = telebot.types.InlineKeyboardButton(text="Посмотреть всю историю", reply_markup=markup,
+                                                 callback_data="show_history")
+        markup.add(btn)
+        _bot.send_message(message.chat.id, 'История ранее:', reply_markup=markup)
+
+
+def show_user_history(message, history):
+    for date, requests in history.items():
 
         _bot.reply_to(message, 'Запрос от ' + date + ':')
         counter = 1
-
-        for line in request:
-            msg = prepare_msg(line, counter)
+        for request in requests:
+            msg = prepare_msg(request, counter)
             counter += 1
 
             markup = telebot.types.InlineKeyboardMarkup()
@@ -129,7 +192,8 @@ days_count = 0
 def price_history_command(message):
     days_count = message.text[len('/pricehistory '):]
     if not days_count.isnumeric() or len(message.text) <= len('/pricehistory '):
-        _bot.reply_to(message, 'Для получения статистики по ценам используйте команду\n/pricehistory *промежуток времени до сегоднящнего дня в днях*')
+        _bot.reply_to(message, 'Для получения статистики по ценам используйте команду'
+                               '\n/pricehistory *промежуток времени до сегоднящнего дня в днях*')
         return
 
     key_words = Key_Words.key_words
@@ -147,7 +211,10 @@ def my_role_command(message):
 
     if _users.is_registered(uid):
         if _users.is_admin(uid):
-            _bot.reply_to(message, "Вы админ")
+            if _users.is_super_user(uid):
+                _bot.reply_to(message, "Вы супер-юзер")
+            else:
+                _bot.reply_to(message, "Вы админ")
         else:
             _bot.reply_to(message, "Вы обычный пользователь")
     else:
@@ -284,12 +351,12 @@ def super_user_transfer_command(message):
         return
 
     if len(message.text) <= len('/superusertransfer '):
-        _bot.reply_to(message, "❕ Синтаксис команды: \n/superusertransfer [ваш id] [id юзера]")
+        _bot.reply_to(message, "❕ Синтаксис команды: \n/superusertransfer [id юзера]")
         return
 
     [user_uid, target_uid] = message.text[len('/superusertransfer '):].split()
 
-    if not target_uid.isnumeric() or not target_uid.isnumeric():
+    if not user_uid.isnumeric() or not target_uid.isnumeric():
         _bot.reply_to(message, "❌ Вы должны ввести свой user id для подтверждения ({}).".format(uid))
         return
 
@@ -313,11 +380,6 @@ def super_user_transfer_command(message):
     _bot.reply_to(message, "✅ пользователь " + str(target_uid) + "теперь является суперпользователем.")
 
 
-@_bot.message_handler(commands=['test'])
-def test_command(message):
-    pass
-
-
 @_bot.callback_query_handler(func=lambda c: 'favourites' in c.data)
 def favourites_buttons_handler(c):
     uid = c.from_user.id
@@ -329,8 +391,13 @@ def favourites_buttons_handler(c):
         Favourites.Favourites.remove_request_from_favourites(uid, full_name)
 
 
+@_bot.callback_query_handler(func=lambda c: 'history' in c.data)
+def history_buttons_handler(c):
+    show_user_history(c.message, _history)
+
+
 @_bot.callback_query_handler(func=lambda c: 'category' in c.data)
-def favourites_buttons_handler(c):
+def categories_buttons_handler(c):
     category = c.data.split('_')[0]
     show_history(c, category, Requests.Requests.get_price_statistics_history(category, days_count))
 
@@ -349,24 +416,27 @@ def prepare_msg(line, counter):
     if line['per'] is not None:
         msg += ' за {}'.format(line['per'])
     msg += '\n'
-    if line['rating'] is None:
-        line['rating'] = 'отсутствует'
-    msg += 'Рейтинг: {}\n'.format(line['rating'])
-    msg += 'Доступно в:\n'
-    for available_at in line['available_at']:
-        msg += ' -- {}\n'.format(available_at)
-    msg += line['url']
+    if line['rating'] is not None and line['rating'] != 0:
+        msg += 'Рейтинг: {}\n'.format(line['rating'])
+    #msg += 'Доступно в:\n'
+    #for available_at in line['available_at']:
+       # msg += ' -- {}\n'.format(available_at)
+    if line['url'] is not None:
+        msg += '\n'
+        msg += line['url']
     msg += '\n\n'
     return msg
 
 
 def cron_requests_update():
+    print('Начало обновления данных')
     history_appender = HistoryAppender.HistoryAppender(Parsers.parsers)
     history_appender.append_history()
+    print('Конец обновления данных')
 
     db_result = RenewedFavourites.RenewedFavourites.get_renewed_favourites()
     for user_id, full_name in db_result:
-        _bot.send_message(user_id, "Изменилась цена на товар из вашего избранного под названием\n{}".format(full_name))
+        _bot.send_message(user_id, "Товар из вашего избранного был обновлен:\n{}".format(full_name))
 
     RenewedFavourites.RenewedFavourites.clear_renewed_favourites()
 
@@ -374,11 +444,19 @@ def cron_requests_update():
 def timer():
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(60)
 
 
-#schedule.every().day.at("22:37").do(cron_requests_update)
-#threading.Thread(target=timer).start()
-cron_requests_update()
+schedule.every().day.at("02:30").do(cron_requests_update)
+threading.Thread(target=timer).start()
+#cron_requests_update()
 
-_bot.polling()
+while True:
+    try:
+        _bot.polling(none_stop=True)
+
+    except Exception as e:
+        print('#: Бот перестал работать по причине:')
+        print(e)
+        print('\n')
+        time.sleep(15)

@@ -6,7 +6,7 @@ class JSON_Converter:
     # возвращает json-сериализованную версию объекта
     @staticmethod
     def serialize(obj):
-        return json.dumps(obj, cls=MyEncoder)
+        return json.dumps(obj, cls=MyEncoder, ensure_ascii=False)
 
     # возвращает python-десериализованную версию json-строки
     @staticmethod

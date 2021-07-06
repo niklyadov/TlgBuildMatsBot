@@ -105,7 +105,7 @@ create table Requests (
 );
 
 create trigger error_on_request_update
-    before update on settings
+    before update on Requests
 begin
     select raise(abort, 'You cannot update requests.');
 end;
@@ -128,14 +128,13 @@ end;
 
 create trigger renew_favourites_on_request_insert
     after insert on requests
-    when new.full_name in
-         (select result from logs
-         where id in (select log_id from favourites))
+    when ((select count() from (select result from logs
+         where id in (select log_id from favourites) and lower(Logs.result) like '%'||lower(new.full_name)||'%')) > 0)
 begin
     insert into Renewed_Favourites (user_id, full_name)
     values ((select user_id
             from logs
-            where result like '%'||new.full_name||'%'),
+            where lower(result) like '%'||lower(new.full_name)||'%'),
             new.full_name);
 end;
 

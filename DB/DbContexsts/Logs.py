@@ -33,11 +33,14 @@ class Logs:
         with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             json_result = cursor.execute(
-                "select date, result from logs where user_id = ?",
+                "select date, result from logs where user_id = ? order by date desc",
                                   (user_id,)).fetchall()
+
             result = {}
-            for item in json_result:
-                if item[1] is not None:
-                    result[item[0]] = JSON_Converter.JSON_Converter.deserialize(item[1])
+            for date, item in json_result:
+                if date not in result.keys():
+                    result[date] = [JSON_Converter.JSON_Converter.deserialize(item)]
+                else:
+                    result[date].append(JSON_Converter.JSON_Converter.deserialize(item))
             return result
 
