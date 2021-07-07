@@ -83,7 +83,7 @@ class Users:
         with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
-                "select round(julianday(start_date)), count() from users where julianday() - julianday(start_date) < ? group by round(julianday(start_date))",
+                "select start_date, count() from users where julianday() - julianday(start_date) < ? group by round(julianday(start_date))",
                 (days_count, )).fetchall()
             stat = []
             for line in db_result:

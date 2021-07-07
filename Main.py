@@ -1,8 +1,10 @@
 import telebot
-from Logic import BestFinder, HistoryAppender, Parsers
+from Logic import BestFinder, HistoryAppender, Parsers, Graphics
 import schedule
 import threading
 import time
+import os
+
 
 from DB.DbContexsts import Users, Settings, Requests, RenewedFavourites, Logs, Key_Words, Favourites
 
@@ -247,10 +249,11 @@ def admin_users_history_command(message):
     if not Users.Users.is_admin(uid):
         return
 
-    # TODO - Дарья: сделать вывод графика зарегистрированных пользователей по дням
-    # days_count = message.text[len('/usershistory '):]
-    # Users.Users.get_users_statistics_history(days_count)
-    pass
+    days_count = message.text[len('/usershistory '):]
+    stat = Users.Users.get_users_statistics_history(days_count)
+    save_path = graphic_user_history(stat)
+    _bot.send_photo(message.from_user.id, photo=save_path)
+    os.remove(save_path)
 
 
 # команда, позволяющая админу увидеть график количества запросов пользователей по дням
@@ -260,10 +263,11 @@ def admin_requests_history_command(message):
     if not Users.Users.is_admin(uid):
         return
 
-    # TODO - Дарья: сделать вывод графика запросов от пользователей по дням
-    # days_count = message.text[len('/requestshistory '):]
-    # Logs.Logs.get_requests_statistics_history(days_count)
-    pass
+    days_count = message.text[len('/requestshistory '):]
+    stat = Logs.Logs.get_requests_statistics_history(days_count)
+    save_path = graphic_requests_history(stat)
+    _bot.send_photo(message.from_user.id, photo=save_path)
+    os.remove(save_path)
 
 
 # команда, позволяющая супер-юзеру установить другому пользователю роль админа

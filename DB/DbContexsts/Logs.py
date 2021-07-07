@@ -20,7 +20,7 @@ class Logs:
         with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
-                "select round(julianday(date)), count() from logs where julianday() - julianday(date) < ? group by round(julianday(date))",
+                "select date, count() from logs where julianday() - julianday(date) < ? group by round(julianday(date))",
                 (days_count, )).fetchall()
             stat = []
             for line in db_result:
