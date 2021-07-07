@@ -10,7 +10,6 @@ class Parser:
     def search(search_word):
         pass
 
-# TODO - Никита: парсинг url и available_at - просто список городов
 class RadugastroyParser(Parser):
 
     @staticmethod
@@ -52,19 +51,21 @@ class SdvorParser(Parser):
 
         addresses = []
         for city in cities:
-            json_addresses = json.loads(requests.get('https://www.sdvor.com/api/omni_order/shops/?city_id={}'.format(city['id'])).text)
-            for address in json_addresses:
-                addresses.append(city['name'] + ' ' + address['address'])
+            addresses.append(city['name'])
 
-        result = []
+        items = {}
 
         for city in cities:
             html = requests.get(
                 'https://www.sdvor.com/' + city['uri_name'] + '/search/?only_in_stock=true&str=' + search_word).text
             soup = BeautifulSoup(html, "html.parser")
             for block in soup.find_all("div", {"class": "w1l5ijvb p4t3w1l".split()}):
+                identity = block.find('span', {'class': 'p1gaa8sl'}).text
+                if identity in items:
+                    continue
+
                 link = block.find("div", {"class": "i1b5ubz7"}).find("a")
-                url = link.get('href')
+                url = 'https://www.sdvor.com/' + link.get('href')
                 name = link.text
 
                 price_elem = block.find("span", {"class": "p1hbhc78"})
@@ -72,7 +73,7 @@ class SdvorParser(Parser):
                     continue
                 price = price_elem.text.replace(' ₽', '')
 
-                result.append(RequestModel(
+                items[identity] = RequestModel(
                     search_word,
                     url,
                     name,
@@ -80,7 +81,12 @@ class SdvorParser(Parser):
                     None,
                     0,
                     addresses
-                ))
+                )
+
+        result = []
+
+        for key, value in items.items():
+            result.append(value)
 
         return result
 
@@ -89,10 +95,19 @@ class Sb1Parser(Parser):
 
     @staticmethod
     def search(search_word):
-        html = requests.get('https://s-b-1.ru/catalog/?q=' + search_word).text
-        soup = BeautifulSoup(html, "html.parser")
 
         addresses = []
+
+        soup2 = BeautifulSoup(requests.get('https://s-b-1.ru/contacts/').text, "html.parser")
+
+        for city in soup2.find('table', {'class': 'contacts-stores no-border shops list'.split()}).find_all('tr'):
+            if city.get("class") is not None:
+                continue
+
+            addresses.append(city.find('h4').text)
+
+        html = requests.get('https://s-b-1.ru/catalog/?q=' + search_word).text
+        soup = BeautifulSoup(html, "html.parser")
 
         result = []
         for block in soup.find_all("div", {"class": "item_block"}):
