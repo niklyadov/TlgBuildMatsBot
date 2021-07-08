@@ -139,9 +139,41 @@ create table Key_Words (
     id integer primary key,
     word text not null
 );
--- create some keywords --
+
+insert into Key_Words (word) values ('шпатлевка');
+insert into Key_Words (word) values ('краска');
+insert into Key_Words (word) values ('цемент');
+insert into Key_Words (word) values ('профиль');
+insert into Key_Words (word) values ('гипсокартон');
+insert into Key_Words (word) values ('обои');
+insert into Key_Words (word) values ('пена монтажная');
+insert into Key_Words (word) values ('утеплитель');
+insert into Key_Words (word) values ('саморез');
+insert into Key_Words (word) values ('гвоздь');
+insert into Key_Words (word) values ('шуруп');
+insert into Key_Words (word) values ('болт');
+insert into Key_Words (word) values ('штукатурка');
+insert into Key_Words (word) values ('клей для плитки');
+insert into Key_Words (word) values ('фанера');
+insert into Key_Words (word) values ('дсп');
+insert into Key_Words (word) values ('двп');
+insert into Key_Words (word) values ('цсп');
+insert into Key_Words (word) values ('гсп');
+insert into Key_Words (word) values ('арматура');
+insert into Key_Words (word) values ('швеллер');
+insert into Key_Words (word) values ('грунтовка');
+insert into Key_Words (word) values ('доска');
+insert into Key_Words (word) values ('вагонка');
+insert into Key_Words (word) values ('брус');
+insert into Key_Words (word) values ('жидкие гвозди');
+insert into Key_Words (word) values ('гипс');
+insert into Key_Words (word) values ('щебень');
+insert into Key_Words (word) values ('песок');
+insert into Key_Words (word) values ('облицовочный кирпич');
+insert into Key_Words (word) values ('строительный кирпич');
+insert into Key_Words (word) values ('гидроизоляция');
+insert into Key_Words (word) values ('шлакоблок');
 insert into Key_Words (word) values ('камень');
-insert into Key_Words (word) values ('кирпич');
 insert into Key_Words (word) values ('бетон');
 
 -- Favourites ----------------------------------------------------------------------------------------------------------
