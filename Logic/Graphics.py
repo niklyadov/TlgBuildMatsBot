@@ -44,6 +44,8 @@ class Graphics:
         plt.title(str, color='darkmagenta')
         plt.xlabel('Дата', color='grey')
         plt.ylabel('Количество', color='grey')
+        if not is_plot:
+            plt.yticks((np.arange(0, max(y)+1)))
         plt.grid(True)
 
         save_path = Graphics._get_save_path()
