@@ -199,8 +199,8 @@ def price_history_command(message):
                                '\n/pricehistory [промежуток времени до сегоднящнего дня в днях]')
         return
     days_count = int(days_count)
-    if days_count == 0:
-        _bot.reply_to(message, 'Количество дней должно быть больше нуля')
+    if days_count <= 1:
+        _bot.reply_to(message, 'Количество дней должно быть больше одного')
         return
 
     key_words = Key_Words.key_words
