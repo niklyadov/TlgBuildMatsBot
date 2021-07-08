@@ -1,5 +1,6 @@
 import sqlite3
 from Models import StatisticModel
+import Utils.DatesHandler as dh
 
 
 class Users:
@@ -83,10 +84,12 @@ class Users:
         with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
-                "select start_date, count() from users where julianday() - julianday(start_date) < ? group by round(julianday(start_date))",
+                "select date(round(julianday(start_date))) dt, count() "
+                "from users where julianday() - julianday(start_date) < ? "
+                "group by dt "
+                "order by dt",
                 (days_count, )).fetchall()
-            stat = []
-            for line in db_result:
-                stat.append(StatisticModel.StatisticModel(line[0], line[1]))
-        return stat
+
+            days = dh.get_all_dates_from_now(days_count)
+            return dh.fill_data(days, db_result)
 

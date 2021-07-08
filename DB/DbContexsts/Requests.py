@@ -3,6 +3,7 @@ import sqlite3
 from Models import StatisticModel
 from Utils.JSON_Converter import JSON_Converter
 import Utils.Float_Conv as flt
+import Utils.DatesHandler as dh
 
 
 class Requests:
@@ -47,15 +48,15 @@ class Requests:
         with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
-                "select date(round(julianday(date))), sum(price) / count()"
+                "select date(round(julianday(date))) dt, sum(price) / count() "
                 "from requests "
                 "where key_word_id = (select id from key_words where word = ?) "
-                "and julianday() - julianday(date) < ?"
-                "group by date(round(julianday(date)))", (key_word, days_count)).fetchall()
-            stat = []
-            for line in db_result:
-                stat.append(StatisticModel.StatisticModel(line[0], line[1]))
-        return stat
+                "and julianday() - julianday(date) < ? "
+                "group by dt "
+                "order by dt", (key_word, days_count)).fetchall()
+
+            days = dh.get_all_dates_from_now(days_count)
+            return dh.fill_data(days, db_result)
 
 
 

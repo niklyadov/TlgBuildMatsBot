@@ -1,6 +1,7 @@
 import sqlite3
 from Models import StatisticModel
 from Utils import JSON_Converter
+import Utils.DatesHandler as dh
 
 
 class Logs:
@@ -20,12 +21,14 @@ class Logs:
         with sqlite3.connect("DB/main.db") as dbc:
             cursor = dbc.cursor()
             db_result = cursor.execute(
-                "select date, count() from logs where julianday() - julianday(date) < ? group by round(julianday(date))",
+                "select date(round(julianday(date))) dt, count() "
+                "from logs where julianday() - julianday(date) < ? "
+                "group by dt "
+                "order by dt",
                 (days_count, )).fetchall()
-            stat = []
-            for line in db_result:
-                stat.append(StatisticModel.StatisticModel(line[0], line[1]))
-        return stat
+
+            days = dh.get_all_dates_from_now(days_count)
+            return dh.fill_data(days, db_result)
 
     # возвращает список реквестов пользователя
     @staticmethod

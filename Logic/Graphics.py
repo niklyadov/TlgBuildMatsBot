@@ -8,48 +8,45 @@ class Graphics:
 
     # генерация названия изображения
     @staticmethod
-    def generate_random_string(length=10):
+    def _generate_random_string(length=10):
         letters = string.ascii_lowercase
         rand_string = ''.join(random.choice(letters) for i in range(length))
         return rand_string
 
-    # график количества зарегистрированных пользователей по дням
+    # создание полного пути
     @staticmethod
-    def graphic_user_history(stat):
+    def _get_save_path():
+        fig_name = Graphics._generate_random_string()
+        save_path = os.getcwd() + '\\' + fig_name + '.png'
+        return save_path
+
+    # возвращает полный путь к png, на которой изображена гистограмма
+    @staticmethod
+    def get_history_histogram(stat, str):
+        return Graphics._get_history(stat, str, False)
+
+    # возвращает полный путь к png, на которой изображена гистограмма
+    @staticmethod
+    def get_history_plot(stat, str):
+        return Graphics._get_history(stat, str, True)
+
+    @staticmethod
+    def _get_history(stat, str, is_plot):
         x = []
         y = []
-        for day in stat:
-            x.append(day.date[:-9])
-            y.append(day.count)
-        plt.bar(x,y,color='orange')
-        plt.title('Статистика количества зарегистрированных пользователей по дням',color='darkmagenta')
-        plt.xlabel('Дата',color='grey')
-        plt.ylabel('Количество',color='grey')
-        plt.grid(True)
-        plt.yticks((np.arange(0, max(y)+1)))
-
-        fig_name = Graphics.generate_random_string()
-        save_path = os.getcwd()[:-len('\Logic')] + '\Graphics' + '\\' + fig_name
-        plt.savefig(save_path)
-        return save_path+'.png'
-
-    # график количества запросов пользователей по дням
-    @staticmethod
-    def graphic_requests_history(stat):
-        x = []
-        y = []
-        for day in stat:
-            x.append(day.date[:-9])
-            y.append(day.count)
-        plt.bar(x, y, color='orange')
-        plt.title('Статистика количества запросов пользователей по дням', color='darkmagenta')
+        for day, count in stat.items():
+            x.append(day[5:])
+            y.append(count)
+        if is_plot:
+            plt.plot(x, y, color='orange')
+        else:
+            plt.bar(x, y, color='orange')
+        plt.title(str, color='darkmagenta')
         plt.xlabel('Дата', color='grey')
         plt.ylabel('Количество', color='grey')
         plt.grid(True)
-        plt.yticks((np.arange(0, max(y) + 1)))
 
-        fig_name = Graphics.generate_random_string()
-        save_path = os.getcwd()[:-len('\Logic')] + '\Graphics' + '\\' + fig_name
+        save_path = Graphics._get_save_path()
         plt.savefig(save_path)
-        plt.show()
-        return save_path + '.png'
+        plt.close()
+        return save_path

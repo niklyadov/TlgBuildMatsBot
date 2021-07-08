@@ -196,9 +196,10 @@ def price_history_command(message):
     days_count = message.text[len('/pricehistory '):]
     if not days_count.isnumeric() or len(message.text) <= len('/pricehistory '):
         _bot.reply_to(message, 'Для получения статистики по ценам используйте команду'
-                               '\n/pricehistory *промежуток времени до сегоднящнего дня в днях*')
+                               '\n/pricehistory [промежуток времени до сегоднящнего дня в днях]')
         return
-    if int(days_count) == 0:
+    days_count = int(days_count)
+    if days_count == 0:
         _bot.reply_to(message, 'Количество дней должно быть больше нуля')
         return
 
@@ -249,11 +250,13 @@ def admin_users_history_command(message):
     if not Users.Users.is_admin(uid):
         return
 
-    days_count = message.text[len('/usershistory '):]
-    stat = Users.Users.get_users_statistics_history(days_count)
-    save_path = graphic_user_history(stat)
-    _bot.send_photo(message.from_user.id, photo=save_path)
-    os.remove(save_path)
+    days_count = get_days_from_command(message, "usershistory")
+    if days_count is None:
+        return
+
+    stat = Users.Users.get_users_statistics_history(int(days_count))
+    save_path = Graphics.Graphics.get_history_histogram(stat, 'Статистика количества зарегистрированных пользователей по дням')
+    send_image(message.from_user.id, save_path)
 
 
 # команда, позволяющая админу увидеть график количества запросов пользователей по дням
@@ -263,10 +266,31 @@ def admin_requests_history_command(message):
     if not Users.Users.is_admin(uid):
         return
 
-    days_count = message.text[len('/requestshistory '):]
-    stat = Logs.Logs.get_requests_statistics_history(days_count)
-    save_path = graphic_requests_history(stat)
-    _bot.send_photo(message.from_user.id, photo=save_path)
+    days_count = get_days_from_command(message, "requestshistory")
+    if days_count is None:
+        return
+
+    stat = Logs.Logs.get_requests_statistics_history(int(days_count))
+    save_path = Graphics.Graphics.get_history_histogram(stat, 'Статистика количества запросов пользователей по дням')
+    send_image(message.from_user.id, save_path)
+
+
+def get_days_from_command(message, command):
+    if not len(message.text) > len('/{} '.format(command)):
+        _bot.reply_to(message, 'Формат команды: /{} [промежуток времени до сегоднящнего дня в днях]'.format(command))
+        return None
+
+    days_count = message.text[len('/{} '.format(command)):]
+    if not days_count.isnumeric():
+        _bot.reply_to(message, 'Количество дней должно быть целым числом')
+        return None
+    return days_count
+
+
+def send_image(uid, save_path):
+    img = open(save_path, 'rb')
+    _bot.send_photo(uid, photo=img)
+    img.close()
     os.remove(save_path)
 
 
@@ -415,11 +439,11 @@ def categories_buttons_handler(c):
     _bot.answer_callback_query(c.id)
 
 
-def show_history(c, category, data):
+def show_history(c, category, stat):
     # TODO - Дарья: сделать вывод графика цен по дням по данной категории
     _bot.send_message(c.from_user.id, 'Статистика по категории - {}:'.format(category))
-    for line in data:
-        _bot.send_message(c.from_user.id, '-- Дата: {}\n-- Средняя цена: {}'.format(line.date, line.count))
+    save_path = Graphics.Graphics.get_history_plot(stat, 'Статистика изменения цены по категории {}'.format(category))
+    send_image(c.from_user.id, save_path)
 
 
 def prepare_msg(line, counter):
