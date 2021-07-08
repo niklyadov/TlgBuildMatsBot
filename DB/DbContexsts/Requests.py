@@ -10,6 +10,10 @@ class Requests:
 
     # добавление реквеста в базу
     @staticmethod
+    def get_connection():
+        return sqlite3.connect("DB/main.db")
+
+    @staticmethod
     def add_request(request):
         with sqlite3.connect("DB/main.db") as dbc:
             json_result = JSON_Converter.serialize(request)
@@ -18,6 +22,15 @@ class Requests:
                 'values (?, ?, (select id from key_words where word = ?), ?)',
                 (request.full_name, request.price, request.key_word, json_result))
             dbc.commit()
+
+    @staticmethod
+    def add_request(dbc, request):
+        json_result = JSON_Converter.serialize(request)
+        dbc.execute(
+            'insert into requests (full_name, price, key_word_id, result) '
+            'values (?, ?, (select id from key_words where word = ?), ?)',
+            (request.full_name, request.price, request.key_word, json_result))
+        dbc.commit()
 
     # возвращает список реквестов за последний день, добавленных по ключевому слову
     @staticmethod

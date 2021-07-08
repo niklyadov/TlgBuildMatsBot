@@ -494,7 +494,7 @@ def timer():
         time.sleep(60)
 
 
-schedule.every().day.at("16:30").do(cron_requests_update)
+schedule.every().day.at("18:00").do(cron_requests_update)
 threading.Thread(target=timer).start()
 
 while True:

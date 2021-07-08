@@ -6,24 +6,19 @@ class HistoryAppender:
     def __init__(self, parsers):
         self.parsers = parsers
 
-    def append(self, parser, key_word):
-        result = parser.search(key_word)
-        for request in result:
-            Requests.Requests.add_request(request)
+    def append(self, parser, key_words):
+        with Requests.Requests.get_connection() as dbc:
+            for key_word in key_words:
+                result = parser.search(key_word)
+                for request in result:
+                    Requests.Requests.add_request(dbc, request)
 
     def append_history(self):
-
         threads = []
         for parser in self.parsers:
-            for key_word in Key_Words.key_words:
-                thread = threading.Thread(target=self.append, args=(parser, key_word))
-                threads.append(thread)
-                thread.start()
+            thread = threading.Thread(target=self.append, args=(parser, Key_Words.key_words))
+            threads.append(thread)
+            thread.start()
         for th in threads:
             th.join()
-
-        #for parser in self.parsers:
-           # for key_word in Key_Words.key_words:
-              #  print('added result:\nkey_word: {}\n\n'.format(key_word))
-              #  self.append(parser, key_word)
 
