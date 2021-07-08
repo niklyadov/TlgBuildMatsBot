@@ -136,9 +136,10 @@ def history_command(message):
 
 def show_user_history(message, history):
     for date, requests in history.items():
-
         counter = 1
         for request in requests:
+            if len(request) == 0:
+                continue
             msg = 'Запрос от 📅 ' + date + ':\n'
             msg += prepare_msg(request, counter)
             counter += 1
