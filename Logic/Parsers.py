@@ -111,11 +111,12 @@ class Sb1Parser(Parser):
 
         result = []
         for block in soup.find_all("div", {"class": "item_block"}):
-            link = block.find("div", {"class": "item-title"})
-            name = link.find("span").text
+            title = block.find("div", {"class": "item-title"})
+            name = title.find("span").text
             price = block.find("span", {"class": "price_value"}).text
             item_stock = block.find("div", {"class": "item-stock"})
-            url = link.get('href')
+
+            url = 'https://s-b-1.ru/' + title.find('a').get('href')
 
             if item_stock.find("span", {"class": "value"}).text == "Нет в наличии":
                 continue
