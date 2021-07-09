@@ -35,18 +35,12 @@ def search_word_command(message):
     settings = Settings.Settings.get_settings(uid)
     bf = BestFinder.BestFinder(settings[0], settings[1], uid)
     top = bf.find_best(message.text[8:])
-    msg = ""
     if len(top) == 0:
         _bot.reply_to(message, "Ничего не найдено \U0001F614")
         return
 
     _bot.reply_to(message, "По вашему запросы были найдены следующие товары:")
-    counter = 1
-    for id, value in top:
-        msg = prepare_msg(value, counter)
-        counter += 1
-
-        _bot.send_message(message.from_user.id, msg)
+    show_requests(message, None, [i[1] for i in top])
 
 
 _ordering = {1: 'цена', 2: 'рейтинг', 3: 'а-я', 4: 'я-а'}
@@ -136,19 +130,25 @@ def history_command(message):
 
 def show_user_history(message, history):
     for date, requests in history.items():
-        counter = 1
-        for request in requests:
-            if len(request) == 0:
-                continue
-            msg = 'Запрос от 📅 ' + date + ':\n'
-            msg += prepare_msg(request, counter)
-            counter += 1
+        show_requests(message, date, requests)
 
-            markup = telebot.types.InlineKeyboardMarkup()
-            btn = telebot.types.InlineKeyboardButton(text="⭐️Добавить в избранное ⭐️", reply_markup=markup,
-                                                             callback_data="add_to_favourites")
-            markup.add(btn)
-            _bot.send_message(message.chat.id, msg, reply_markup = markup)
+
+def show_requests(message, date, requests):
+    counter = 1
+    for request in requests:
+        msg = ""
+        if len(request) == 0:
+            continue
+        if date is not None:
+            msg = 'Запрос от 📅 ' + date + ':\n'
+        msg += prepare_msg(request, counter)
+        counter += 1
+
+        markup = telebot.types.InlineKeyboardMarkup()
+        btn = telebot.types.InlineKeyboardButton(text="⭐️Добавить в избранное ⭐️", reply_markup=markup,
+                                                 callback_data="add_to_favourites")
+        markup.add(btn)
+        _bot.send_message(message.chat.id, msg, reply_markup=markup)
 
 
 # команда, позволяющая посмотреть список избранного
@@ -457,9 +457,9 @@ def prepare_msg(line, counter):
     msg += '\n'
     if line['rating'] is not None and line['rating'] != 0:
         msg += 'Рейтинг: {}\n'.format(line['rating'])
-    #msg += 'Доступно в:\n'
-    #for available_at in line['available_at']:
-       # msg += ' -- {}\n'.format(available_at)
+    msg += 'Доступно в:\n'
+    for available_at in line['available_at']:
+        msg += ' -- {}\n'.format(available_at)
     if line['url'] is not None:
         msg += '\n'
         msg += line['url']
