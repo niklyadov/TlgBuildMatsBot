@@ -13,8 +13,5 @@ def get_key_words():
 # возвращает ключевое слово, содержащееся в данном сообщении
 def get_key_word(string):
     for word in string:
-        if word in key_words:
+        if word in get_key_words():
             return word
-
-
-key_words = get_key_words()

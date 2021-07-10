@@ -14,7 +14,7 @@ class BestFinder:
 
     # возвращает список RequestModel, отсортированный по ordering и ограниченный top_count
     def find_best(self, search_word):
-        db_items = Requests.get_last_day_requests_by_search_word(search_word)
+        db_items = Requests.get_last_day_requests_by_search_word(search_word.lower())
 
         db_items = [(i[0], json.deserialize(i[1])) for i in db_items]
         if self.ordering == 1:

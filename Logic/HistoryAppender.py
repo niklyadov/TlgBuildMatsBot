@@ -16,7 +16,7 @@ class HistoryAppender:
     def append_history(self):
         threads = []
         for parser in self.parsers:
-            thread = threading.Thread(target=self.append, args=(parser, Key_Words.key_words))
+            thread = threading.Thread(target=self.append, args=(parser, Key_Words.get_key_words()))
             threads.append(thread)
             thread.start()
         for th in threads:

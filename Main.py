@@ -1,12 +1,13 @@
+import DB.Install as inst
 import telebot
 from Logic import BestFinder, HistoryAppender, Parsers, Graphics
 import schedule
 import threading
 import time
 import os
-
-
 from DB.DbContexsts import Users, Settings, Requests, RenewedFavourites, Logs, Key_Words, Favourites
+
+inst.install_db_if_not_exists()
 
 _bot = telebot.TeleBot('1898682710:AAGGjRKCbh3a2zPzylGSqQ_Se9x3xSCPBBM')
 _users = Users.Users()
@@ -204,7 +205,7 @@ def price_history_command(message):
         _bot.reply_to(message, 'Количество дней должно быть больше одного')
         return
 
-    key_words = Key_Words.key_words
+    key_words = Key_Words.get_key_words()
     markup = telebot.types.InlineKeyboardMarkup()
     for word in key_words:
         markup.add(telebot.types.InlineKeyboardButton(text=word,
@@ -380,7 +381,11 @@ def super_user_transfer_command(message):
         return
 
     if len(message.text) <= len('/superusertransfer '):
-        _bot.reply_to(message, "❕ Синтаксис команды: \n/superusertransfer [id юзера]")
+        _bot.reply_to(message, "❕ Синтаксис команды: \n/superusertransfer [ваш id] [id юзера]")
+        return
+
+    if len(message.text.split()) < 3:
+        _bot.reply_to(message, "❕ Синтаксис команды: \n/superusertransfer [ваш id] [id юзера]")
         return
 
     [user_uid, target_uid] = message.text[len('/superusertransfer '):].split()
@@ -406,7 +411,7 @@ def super_user_transfer_command(message):
         return
 
     _users.transfer_super_user_rights(uid, int(target_uid))
-    _bot.reply_to(message, "✅ пользователь " + str(target_uid) + "теперь является суперпользователем.")
+    _bot.reply_to(message, "✅ пользователь " + str(target_uid) + " теперь является суперпользователем.")
 
 
 @_bot.callback_query_handler(func=lambda c: 'favourites' in c.data)
@@ -495,8 +500,11 @@ def timer():
         time.sleep(60)
 
 
-schedule.every().day.at("18:00").do(cron_requests_update)
+schedule.every().day.at("21:00").do(cron_requests_update)
 threading.Thread(target=timer).start()
+
+# Чтобы обновить данные раскомментируйте:
+# cron_requests_update()
 
 while True:
     try:

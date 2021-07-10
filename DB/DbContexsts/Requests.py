@@ -16,12 +16,7 @@ class Requests:
     @staticmethod
     def add_request(request):
         with sqlite3.connect("DB/main.db") as dbc:
-            json_result = JSON_Converter.serialize(request)
-            dbc.execute(
-                'insert into requests (full_name, price, key_word_id, result) '
-                'values (?, ?, (select id from key_words where word = ?), ?)',
-                (request.full_name, request.price, request.key_word, json_result))
-            dbc.commit()
+            Requests.add_request(dbc, request)
 
     @staticmethod
     def add_request(dbc, request):
@@ -29,7 +24,7 @@ class Requests:
         dbc.execute(
             'insert into requests (full_name, price, key_word_id, result) '
             'values (?, ?, (select id from key_words where word = ?), ?)',
-            (request.full_name, request.price, request.key_word, json_result))
+            (request.full_name.lower(), request.price, request.key_word, json_result))
         dbc.commit()
 
     # возвращает список реквестов за последний день, добавленных по ключевому слову
@@ -51,7 +46,7 @@ class Requests:
             cursor = dbc.cursor()
             db_result = cursor.execute(
                 "select id, result from requests "
-                "where lower(full_name) like '%'||lower(?)||'%' and julianday() - julianday(date) < 1",
+                "where full_name like '%'||?||'%' and julianday() - julianday(date) < 1",
                 (search_word,)).fetchall()
             return db_result
 
